@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, empty, fold, get, insert, nextId)
+module IdDict exposing (IdDict, empty, fold, get, insert, nextId, values)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -36,3 +36,8 @@ nextId dict =
 
         Just existing ->
             existing + 1
+
+
+values : IdDict k v -> List v
+values (IdDict dict) =
+    Dict.values dict

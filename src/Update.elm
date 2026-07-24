@@ -145,6 +145,7 @@ updatePlanets model =
                     |> Length.inLightYears
                     |> (\n -> n / 2)
                     |> ceiling
+                    |> (+) 3
         in
         List.foldl
             (\_ m ->
@@ -180,7 +181,7 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
             Random.map2 Point2d.rTheta
                 (Random.map Length.lightYears
                     (Random.float
-                        (Length.inLightYears fromDistance)
+                        (Length.inLightYears (Quantity.max ringWidth fromDistance))
                         (Length.inLightYears toDistance)
                     )
                 )
