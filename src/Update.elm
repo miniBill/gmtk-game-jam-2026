@@ -258,7 +258,7 @@ addPlanet budget fromDistance model =
                     (farmOptions ++ [ factoryOption, depositOption ])
                         |> VirginPlanet
                 )
-                (Random.list 3 farmGenerator)
+                (farmGenerator 3 [])
                 factoryGenerator
                 depositGenerator
     in
@@ -306,30 +306,48 @@ factoryGenerator =
         )
 
 
-farmGenerator : Random.Generator OccupiedPlanet
-farmGenerator =
-    Random.map3
-        (\product maxTurns perTurn ->
-            FarmPlanet
+farmGenerator :
+    Int
+    ->
+        List
+            { product : Product
+            , timeout : Int
+            , perTurn : Int
+            }
+    -> Random.Generator (List OccupiedPlanet)
+farmGenerator count acc =
+    if count <= 0 then
+        Random.constant (List.map FarmPlanet acc)
+
+    else
+        Random.map3
+            (\product maxTurns perTurn ->
                 { product = product
                 , timeout = maxTurns
                 , perTurn = perTurn
                 }
-        )
-        randomProduct
-        (Random.int 2 10)
-        (Random.int 1 3)
+            )
+            (randomProduct (List.map .product acc))
+            (Random.int 2 10)
+            (Random.int 1 3)
+            |> Random.andThen (\farm -> farmGenerator (count - 1) (farm :: acc))
 
 
-randomProduct : Random.Generator Product
-randomProduct =
+randomProduct : List Product -> Random.Generator Product
+randomProduct existing =
+    let
+        pair : Float -> Product -> ( Float, Product )
+        pair weight product =
+            if List.member product existing then
+                ( 0, product )
+
+            else
+                ( weight, product )
+    in
     Random.weighted
-        ( 1, Water )
-        [ ( 1, Grain )
-        , ( 1, Bread )
-        , ( 1, Cheese )
-        , ( 1, Pepper )
-        , ( 1, Pizza )
+        (pair 1 Water)
+        [ pair 1 Grain
+        , pair 1 Milk
         ]
 
 
