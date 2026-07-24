@@ -6,6 +6,7 @@ import Data exposing (Product(..))
 import Id exposing (Id(..), PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
+import List.Extra
 import Point2d exposing (Point2d)
 import Quantity
 import Random
@@ -335,20 +336,16 @@ farmGenerator count acc =
 
 randomProduct : List Product -> Random.Generator Product
 randomProduct existing =
-    let
-        pair : Float -> Product -> ( Float, Product )
-        pair weight product =
-            if List.member product existing then
-                ( 0, product )
+    case
+        List.Extra.removeWhen
+            (\product -> List.member product existing)
+            Data.primary
+    of
+        [] ->
+            Random.constant Water
 
-            else
-                ( weight, product )
-    in
-    Random.weighted
-        (pair 1 Water)
-        [ pair 1 Grain
-        , pair 1 Milk
-        ]
+        h :: t ->
+            Random.uniform h t
 
 
 nameGenerator : Random.Generator String

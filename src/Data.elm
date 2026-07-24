@@ -1,4 +1,4 @@
-module Data exposing (Product(..), productToColor, productToIcon, productToRecipe, productToString)
+module Data exposing (Product(..), primary, productToColor, productToIcon, productToRecipe, productToString)
 
 import Color.Oklch as Oklch
 import Phosphor
@@ -12,6 +12,23 @@ type Product
     | Cheese
     | Pepper
     | Pizza
+
+
+all : List Product
+all =
+    [ Grain
+    , Water
+    , Bread
+    , Milk
+    , Cheese
+    , Pepper
+    , Pizza
+    ]
+
+
+primary : List Product
+primary =
+    List.filter (\product -> productToRecipe product == Nothing) all
 
 
 productToIcon :
