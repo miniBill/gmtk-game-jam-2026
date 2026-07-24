@@ -10,11 +10,12 @@ import IdDict
 import Length exposing (Length, Meters)
 import Point2d
 import Quantity
+import Round
 import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
 import Theme
-import Types exposing (Link, Model, Msg(..), Page(..), Planet, PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (Link, Model, Msg(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -71,7 +72,7 @@ viewPlaying audioData model playingModel =
             , Quantity.difference maxX minX |> Quantity.plus (Quantity.multiplyBy 2 padding)
             , Quantity.difference maxY minY |> Quantity.plus (Quantity.multiplyBy 2 padding)
             ]
-                |> List.map (\l -> String.fromFloat (Length.inLightYears l))
+                |> List.map (\l -> Round.round 2 (Length.inLightYears l))
                 |> String.join " "
     in
     [ Svg.svg
@@ -92,7 +93,7 @@ viewPlaying audioData model playingModel =
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
     Svg.circle
-        [ Svg.Attributes.r (String.fromFloat (1.1 * Theme.planetRadius))
+        [ Svg.Attributes.r (Round.round 2 (1.1 * Theme.planetRadius))
         , Svg.Attributes.fill "#55f"
         , Svg.Events.onClick SelectEarth
         , if model.selected == SelectedEarth then
@@ -113,31 +114,48 @@ viewPlanets model =
 
 viewPlanet : Selected -> Id PlanetId -> Planet -> Svg PlayingMsg
 viewPlanet selected id planet =
-    Svg.circle
-        [ Svg.Attributes.r (String.fromFloat Theme.planetRadius)
-        , cx (Point2d.xCoordinate planet.position)
-        , cy (Point2d.yCoordinate planet.position)
-        , Svg.Attributes.fill "#5f5"
-        , Svg.Events.onClick (SelectPlanet id)
+    let
+        ( cx, cy ) =
+            Point2d.coordinates planet.position
+
+        x : Float
+        x =
+            Length.inLightYears cx - Theme.planetRadius
+
+        y : Float
+        y =
+            Length.inLightYears cy - Theme.planetRadius
+    in
+    Svg.g []
+        [ Svg.image
+            [ Svg.Attributes.x (Round.round 2 x)
+            , Svg.Attributes.y (Round.round 2 y)
+            , Svg.Attributes.width (Round.round 2 (Theme.planetRadius * 2))
+            , Svg.Attributes.height (Round.round 2 (Theme.planetRadius * 2))
+            , case planet.kind of
+                VirginPlanet _ ->
+                    Svg.Attributes.xlinkHref Theme.planetIce
+
+                OccupiedPlanet _ ->
+                    Svg.Attributes.xlinkHref Theme.planetLava
+            , Svg.Events.onClick (SelectPlanet id)
+            , Svg.Attributes.cursor "pointer"
+            ]
+            []
         , if selected == SelectedPlanet id then
-            Svg.Attributes.stroke "red"
+            Svg.circle
+                [ Svg.Attributes.cx (Round.round 2 (Length.inLightYears cx))
+                , Svg.Attributes.cy (Round.round 2 (Length.inLightYears cy))
+                , Svg.Attributes.r (Round.round 2 (Theme.planetRadius * 1.1))
+                , Svg.Attributes.fill "transparent"
+                , Svg.Attributes.strokeWidth "0.024"
+                , Svg.Attributes.stroke "red"
+                ]
+                []
 
           else
-            Svg.Attributes.stroke "green"
-        , Svg.Attributes.strokeWidth "0.025"
-        , Svg.Attributes.cursor "pointer"
+            Svg.text ""
         ]
-        []
-
-
-cx : Length -> Svg.Attribute msg
-cx x =
-    Svg.Attributes.cx (String.fromFloat (Length.inLightYears x))
-
-
-cy : Length -> Svg.Attribute msg
-cy y =
-    Svg.Attributes.cy (String.fromFloat (Length.inLightYears y))
 
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)
