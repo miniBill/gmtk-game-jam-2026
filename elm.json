@@ -14,6 +14,7 @@
             "elm/random": "1.0.0",
             "elm/time": "1.0.0",
             "elmcraft/core-extra": "2.3.0",
+            "ianmackenzie/elm-geometry": "4.0.0",
             "ianmackenzie/elm-units": "2.10.0",
             "miniBill/elm-fast-dict": "1.2.6"
         },
@@ -21,6 +22,11 @@
             "elm/regex": "1.0.0",
             "elm/url": "1.0.0",
             "elm/virtual-dom": "1.0.5",
+            "ianmackenzie/elm-1d-parameter": "1.0.1",
+            "ianmackenzie/elm-float-extra": "1.1.0",
+            "ianmackenzie/elm-interval": "3.1.0",
+            "ianmackenzie/elm-triangular-mesh": "1.1.0",
+            "ianmackenzie/elm-units-interval": "3.2.0",
             "mgold/elm-nonempty-list": "4.2.0"
         }
     },
