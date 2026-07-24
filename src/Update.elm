@@ -136,9 +136,11 @@ updatePlaying msg model =
                         (\planet -> { planet | kind = OccupiedPlanet kind })
                         model.planets
               }
-                |> updatePlanets
             , Cmd.none
             )
+
+        EndTurn ->
+            ( model |> updatePlanets, Cmd.none )
 
 
 updatePlanets : PlayingModel -> PlayingModel

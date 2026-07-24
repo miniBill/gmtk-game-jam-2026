@@ -77,17 +77,25 @@ viewPlaying model =
                 (Quantity.difference maxX minX)
                 (Quantity.difference maxY minY)
     in
-    [ Svg.svg
+    [ Html.div
         [ style "width" "100%"
-        , style "height" "auto"
-        , Svg.Attributes.viewBox viewBox
+        , style "display" "block"
+        , style "max-height" "calc(100dvh - 200px)"
+        , style "anchor-name" playingFieldAnchor
         ]
-        [ viewEarth model
-        , Svg.g
-            [ Svg.Attributes.id "planets" ]
-            (viewPlanets model)
-        , Svg.g [ Svg.Attributes.id "links" ]
-            (viewLinks model)
+        [ Svg.svg
+            [ style "width" "100%"
+            , style "height" "auto"
+            , style "max-height" "100%"
+            , Svg.Attributes.viewBox viewBox
+            ]
+            [ viewEarth model
+            , Svg.g
+                [ Svg.Attributes.id "planets" ]
+                (viewPlanets model)
+            , Svg.g [ Svg.Attributes.id "links" ]
+                (viewLinks model)
+            ]
         ]
     , case model.selected of
         SelectedNone ->
@@ -121,6 +129,11 @@ viewPlaying model =
                 [ Html.text "branch 'SelectedEarth' not implemented"
                 ]
     ]
+
+
+playingFieldAnchor : String
+playingFieldAnchor =
+    "--playing-field"
 
 
 viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
@@ -213,10 +226,15 @@ icon attrs config =
 selectionBox : List (Attribute msg) -> List (Html msg) -> Html msg
 selectionBox attrs children =
     Html.div
-        ([ style "height" "100px"
-         , style "border-radius" "8px"
+        ([ style "border-radius" "8px"
+         , style "max-width" "90vw"
          , style "display" "flex"
+         , style "flex-wrap" "wrap"
+         , style "justify-content" "center"
          , style "gap" "8px"
+         , style "position" "absolute"
+         , style "position-anchor" playingFieldAnchor
+         , style "position-area" "bottom"
          ]
             ++ attrs
         )
@@ -225,7 +243,11 @@ selectionBox attrs children =
 
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
-    Svg.g [ Svg.Attributes.id "earth" ]
+    Svg.g
+        [ Svg.Attributes.id "earth"
+        , Svg.Events.onClick SelectEarth
+        , Svg.Attributes.cursor "pointer"
+        ]
         [ if model.selected == SelectedEarth then
             Svg.circle
                 [ SvgAttributes.r (Theme.planetRadius * 1.4)
@@ -241,8 +263,6 @@ viewEarth model =
             , SvgAttributes.width (Theme.planetRadius * 2)
             , SvgAttributes.height (Theme.planetRadius * 2)
             , Svg.Attributes.xlinkHref Theme.planetTerran
-            , Svg.Events.onClick SelectEarth
-            , Svg.Attributes.cursor "pointer"
             ]
             []
         ]
@@ -294,8 +314,6 @@ viewPlanet selected id planet =
                 , SvgAttributes.width (Theme.planetRadius * 2)
                 , SvgAttributes.height (Theme.planetRadius * 2)
                 , Svg.Attributes.xlinkHref src
-                , Svg.Events.onClick (SelectPlanet id)
-                , Svg.Attributes.cursor "pointer"
                 ]
                 []
 
@@ -317,7 +335,10 @@ viewPlanet selected id planet =
                 []
     in
     Svg.g
-        [ Svg.Attributes.id (Id.toString id) ]
+        [ Svg.Attributes.id (Id.toString id)
+        , Svg.Events.onClick (SelectPlanet id)
+        , Svg.Attributes.cursor "pointer"
+        ]
         (img :: selectionView)
 
 

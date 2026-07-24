@@ -99,3 +99,4 @@ type PlayingMsg
     | SelectPlanet (Id PlanetId)
     | SelectEarth
     | OccupyPlanet (Id PlanetId) OccupiedPlanet
+    | EndTurn
