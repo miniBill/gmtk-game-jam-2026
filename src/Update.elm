@@ -253,7 +253,14 @@ addPlanet budget fromDistance model =
 
         kindGenerator : Random.Generator PlanetKind
         kindGenerator =
-            Random.map VirginPlanet (Random.list 5 occupiedPlanetGenerator)
+            Random.map3
+                (\farmOptions factoryOption depositOption ->
+                    (farmOptions ++ [ factoryOption, depositOption ])
+                        |> VirginPlanet
+                )
+                (Random.list 5 farmGenerator)
+                factoryGenerator
+                depositGenerator
     in
     case planet of
         GiveUpGeneration ->
@@ -269,56 +276,49 @@ addPlanet budget fromDistance model =
             addPlanet (budget - 5) fromDistance { model | currentSeed = nextSeed }
 
 
-occupiedPlanetGenerator : Random.Generator OccupiedPlanet
-occupiedPlanetGenerator =
-    Random.weighted ( 1, FarmKind ) [ ( 1, FactoryKind ), ( 1, DepositKind ) ]
-        |> Random.andThen
-            (\k ->
-                case k of
-                    FarmKind ->
-                        Random.map3
-                            (\product maxTurns perTurn ->
-                                FarmPlanet
-                                    { product = product
-                                    , turnsLeft = maxTurns
-                                    , perTurn = perTurn
-                                    }
-                            )
-                            randomProduct
-                            (Random.int 2 10)
-                            (Random.int 1 3)
-
-                    FactoryKind ->
-                        Random.map
-                            (\efficiency ->
-                                FactoryPlanet
-                                    { efficiency = efficiency
-                                    , deposit = []
-                                    , order = Nothing
-                                    }
-                            )
-                            (Random.weighted ( 3, 2 )
-                                [ ( 1, 1 )
-                                , ( 0.5, 3 )
-                                ]
-                            )
-
-                    DepositKind ->
-                        Random.map
-                            (\capacity ->
-                                DepositPlanet
-                                    { capacity = capacity
-                                    , content = []
-                                    }
-                            )
-                            (Random.int 5 10)
-            )
+depositGenerator : Random.Generator OccupiedPlanet
+depositGenerator =
+    Random.map
+        (\capacity ->
+            DepositPlanet
+                { capacity = capacity
+                , content = []
+                }
+        )
+        (Random.int 5 10)
 
 
-type PlanetKindWithoutData
-    = FarmKind
-    | FactoryKind
-    | DepositKind
+factoryGenerator : Random.Generator OccupiedPlanet
+factoryGenerator =
+    Random.map
+        (\efficiency ->
+            FactoryPlanet
+                { efficiency = efficiency
+                , deposit = []
+                , order = Nothing
+                }
+        )
+        (Random.weighted ( 0.25, 0 )
+            [ ( 1, 1 )
+            , ( 3, 2 )
+            , ( 0.5, 3 )
+            ]
+        )
+
+
+farmGenerator : Random.Generator OccupiedPlanet
+farmGenerator =
+    Random.map3
+        (\product maxTurns perTurn ->
+            FarmPlanet
+                { product = product
+                , turnsLeft = maxTurns
+                , perTurn = perTurn
+                }
+        )
+        randomProduct
+        (Random.int 2 10)
+        (Random.int 1 3)
 
 
 randomProduct : Random.Generator Product
