@@ -312,7 +312,7 @@ farmGenerator =
         (\product maxTurns perTurn ->
             FarmPlanet
                 { product = product
-                , turnsLeft = maxTurns
+                , timeout = maxTurns
                 , perTurn = perTurn
                 }
         )

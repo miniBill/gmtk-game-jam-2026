@@ -7,10 +7,10 @@ type Product
     = Grain
     | Water
     | Bread
+    | Milk
     | Cheese
     | Pepper
     | Pizza
-    | Milk
 
 
 productToIcon :

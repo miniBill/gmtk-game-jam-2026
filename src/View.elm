@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Audio exposing (AudioData)
 import BoundingBox2d exposing (BoundingBox2d)
-import Data
+import Data exposing (Product)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
@@ -141,7 +141,7 @@ viewPlaying model =
                                     [ style "background" "white"
                                     , style "padding" "8px"
                                     ]
-                                    [ Html.text "branch 'OccupiedPlanet _' not implemented" ]
+                                    [ Html.text "TODO branch 'OccupiedPlanet _' not implemented" ]
                                 ]
                         )
 
@@ -151,7 +151,7 @@ viewPlaying model =
                     [ style "background" "white"
                     , style "padding" "8px"
                     ]
-                    [ Html.text "branch 'SelectedLink _' not implemented" ]
+                    [ Html.text "TODO branch 'SelectedLink _' not implemented" ]
                 ]
 
         SelectedEarth ->
@@ -164,11 +164,10 @@ viewPlaying model =
                     , Html.span
                         [ style "font-weight" "bold" ]
                         [ Html.text "needs" ]
-                    , productAndTurns
-                        { product = model.earthNeed.product
-                        , turns = model.earthNeed.timeout
-                        , quantity = model.earthNeed.quantity
-                        }
+                    , htmlTwoColumnGrid
+                        [ Product model.earthNeed.quantity model.earthNeed.product
+                        , Timeout model.earthNeed.timeout
+                        ]
                     ]
                 ]
     ]
@@ -181,6 +180,43 @@ playingFieldAnchor =
 
 viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
 viewVirginPlanetOption planetId option =
+    let
+        ( background, children ) =
+            case option of
+                FarmPlanet { product, timeout, perTurn } ->
+                    ( "#cfc"
+                    , [ icon [ style "height" "30px" ]
+                            { icon = Phosphor.tractor
+                            , title = "Farm"
+                            }
+                      , productAndTurns
+                            { quantity = perTurn
+                            , product = product
+                            , turns = timeout
+                            }
+                      ]
+                    )
+
+                FactoryPlanet { efficiency } ->
+                    ( "#fcc"
+                    , [ icon [ style "height" "30px" ]
+                            { title = "Factory"
+                            , icon = Phosphor.factory
+                            }
+                      , htmlTwoColumnGrid [ Efficiency efficiency ]
+                      ]
+                    )
+
+                DepositPlanet { capacity } ->
+                    ( "#ccc"
+                    , [ icon [ style "height" "30px" ]
+                            { title = "Deposit"
+                            , icon = Phosphor.warehouse
+                            }
+                      , htmlTwoColumnGrid [ Capacity capacity ]
+                      ]
+                    )
+    in
     Html.div
         [ style "border-radius" "4px"
         , style "gap" "4px"
@@ -188,52 +224,12 @@ viewVirginPlanetOption planetId option =
         , style "display" "flex"
         , style "flex-direction" "column"
         , style "align-items" "center"
-        , style "background-color" "lightgray"
+        , style "background-color" background
         , style "width" "60px"
         , Html.Attributes.class "on-hover-highlight"
         , Html.Events.onClick (OccupyPlanet planetId option)
         ]
-        (case option of
-            FarmPlanet { product, turnsLeft, perTurn } ->
-                [ icon [ style "height" "30px" ]
-                    { icon = Phosphor.tractor
-                    , title = "Farm"
-                    }
-                , productAndTurns
-                    { quantity = perTurn
-                    , product = product
-                    , turns = turnsLeft
-                    }
-                ]
-
-            FactoryPlanet { efficiency } ->
-                [ icon [ style "height" "30px" ]
-                    { title = "Factory"
-                    , icon = Phosphor.factory
-                    }
-                , twoColumnGrid
-                    [ Html.div [] [ Html.text (String.fromInt efficiency) ]
-                    , icon []
-                        { icon = Phosphor.clock
-                        , title = "Production per turn"
-                        }
-                    ]
-                ]
-
-            DepositPlanet { capacity } ->
-                [ icon [ style "height" "30px" ]
-                    { title = "Deposit"
-                    , icon = Phosphor.warehouse
-                    }
-                , twoColumnGrid
-                    [ Html.div [] [ Html.text (String.fromInt capacity) ]
-                    , icon []
-                        { icon = Phosphor.package
-                        , title = "Capacity"
-                        }
-                    ]
-                ]
-        )
+        children
 
 
 productAndTurns :
@@ -243,22 +239,14 @@ productAndTurns :
     }
     -> Html msg
 productAndTurns { quantity, product, turns } =
-    twoColumnGrid
-        [ Html.div [] [ Html.text (String.fromInt quantity) ]
-        , icon []
-            { icon = Data.productToIcon product
-            , title = Data.productToString product
-            }
-        , Html.div [] [ Html.text (String.fromInt turns) ]
-        , icon []
-            { title = "Turns"
-            , icon = Phosphor.hourglass
-            }
+    htmlTwoColumnGrid
+        [ Product quantity product
+        , Timeout turns
         ]
 
 
-twoColumnGrid : List (Html msg) -> Html msg
-twoColumnGrid children =
+htmlTwoColumnGrid : List GridRow -> Html msg
+htmlTwoColumnGrid children =
     Html.div
         [ style "display" "grid"
         , style "gap" "2px"
@@ -266,7 +254,64 @@ twoColumnGrid children =
         , style "grid-template-columns" "auto auto"
         , style "text-align" "center"
         ]
-        children
+        (List.concatMap gridRowToHtml children)
+
+
+type GridRow
+    = Product Int Product
+    | Timeout Int
+    | Efficiency Int
+    | Capacity Int
+
+
+gridRowToHtml : GridRow -> List (Html msg)
+gridRowToHtml gridRow =
+    let
+        ( text, rowIcon ) =
+            gridRowToTuple gridRow
+    in
+    [ Html.div [] [ Html.text text ]
+    , icon [] rowIcon
+    ]
+
+
+gridRowToTuple :
+    GridRow
+    ->
+        ( String
+        , { icon : Phosphor.IconWeight -> Phosphor.IconVariant
+          , title : String
+          }
+        )
+gridRowToTuple gridRow =
+    case gridRow of
+        Product quantity product ->
+            ( String.fromInt quantity
+            , { icon = Data.productToIcon product
+              , title = Data.productToString product
+              }
+            )
+
+        Timeout turns ->
+            ( String.fromInt turns
+            , { icon = Phosphor.hourglass
+              , title = "Turns"
+              }
+            )
+
+        Efficiency efficiency ->
+            ( String.fromInt efficiency
+            , { icon = Phosphor.speedometer
+              , title = "Production per turn"
+              }
+            )
+
+        Capacity capacity ->
+            ( String.fromInt capacity
+            , { icon = Phosphor.package
+              , title = "Capacity"
+              }
+            )
 
 
 icon :
@@ -343,39 +388,61 @@ viewEarth model =
             , Svg.Attributes.xlinkHref Theme.planetTerran
             ]
             []
-        , Phosphor.hourglass Phosphor.Duotone
-            |> Phosphor.withSize (1.75 * Theme.planetRadius)
-            |> Phosphor.withSizeUnit ""
-            |> Phosphor.toHtml
-                [ SvgAttributes.y (1.45 * Theme.planetRadius)
-                , Svg.Attributes.fill "white"
-                ]
-        , Svg.text_
-            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-            , SvgAttributes.y (Theme.planetRadius * 1.5)
-            , Svg.Attributes.dominantBaseline "hanging"
-            , Svg.Attributes.textAnchor "end"
-            , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
-            , Svg.Attributes.fill "white"
+        , svgTwoColumnGrid
+            { x = Quantity.zero
+            , y = Quantity.zero
+            }
+            [ Product model.earthNeed.quantity model.earthNeed.product
+            , Timeout model.earthNeed.timeout
             ]
-            [ Svg.text (String.fromInt model.earthNeed.timeout) ]
-        , Data.productToIcon model.earthNeed.product Phosphor.Duotone
-            |> Phosphor.withSize (1.75 * Theme.planetRadius)
-            |> Phosphor.withSizeUnit ""
-            |> Phosphor.toHtml
-                [ SvgAttributes.y (3.45 * Theme.planetRadius)
-                , Svg.Attributes.fill "white"
-                ]
-        , Svg.text_
-            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-            , SvgAttributes.y (Theme.planetRadius * 3.5)
-            , Svg.Attributes.dominantBaseline "hanging"
-            , Svg.Attributes.textAnchor "end"
-            , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
-            , Svg.Attributes.fill "white"
-            ]
-            [ Svg.text (String.fromInt model.earthNeed.quantity) ]
         ]
+
+
+svgTwoColumnGrid :
+    { x : Length
+    , y : Length
+    }
+    -> List GridRow
+    -> Svg msg
+svgTwoColumnGrid config rows =
+    rows
+        |> List.indexedMap
+            (\i row ->
+                Svg.g
+                    [ SvgAttributes.transformTranslate
+                        { x = -Theme.planetRadius * 0.2
+                        , y = (toFloat i + 0.9) * Theme.planetRadius * 1.75
+                        }
+                    ]
+                    (gridRowToSvg row)
+            )
+        |> Svg.g
+            [ SvgAttributes.transformTranslate
+                { x = Length.inLightYears config.x
+                , y = Length.inLightYears config.y
+                }
+            ]
+
+
+gridRowToSvg : GridRow -> List (Svg msg)
+gridRowToSvg gridRow =
+    let
+        ( text, rowIcon ) =
+            gridRowToTuple gridRow
+    in
+    [ rowIcon.icon Phosphor.Duotone
+        |> Phosphor.withSize (1.5 * Theme.planetRadius)
+        |> Phosphor.withSizeUnit ""
+        |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
+    , Svg.text_
+        [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+        , Svg.Attributes.dominantBaseline "hanging"
+        , Svg.Attributes.textAnchor "end"
+        , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
+        , Svg.Attributes.fill "white"
+        ]
+        [ Svg.text text ]
+    ]
 
 
 viewPlanets : PlayingModel -> List (Svg PlayingMsg)
@@ -401,10 +468,10 @@ viewPlanet selected id planet =
         src =
             case planet.kind of
                 VirginPlanet _ ->
-                    Theme.planetBarren
+                    Theme.planetIce
 
-                OccupiedPlanet (FarmPlanet { turnsLeft }) ->
-                    if turnsLeft == 0 then
+                OccupiedPlanet (FarmPlanet { timeout }) ->
+                    if timeout == 0 then
                         Theme.planetBlackHole
 
                     else
@@ -414,7 +481,7 @@ viewPlanet selected id planet =
                     Theme.planetLava
 
                 OccupiedPlanet (DepositPlanet _) ->
-                    Theme.planetIce
+                    Theme.planetBarren
 
         img : Svg PlayingMsg
         img =
@@ -443,13 +510,43 @@ viewPlanet selected id planet =
 
             else
                 []
+
+        bottomView =
+            case planet.kind of
+                VirginPlanet _ ->
+                    Svg.text ""
+
+                OccupiedPlanet (FarmPlanet farm) ->
+                    svgTwoColumnGrid
+                        { x = cx
+                        , y = cy
+                        }
+                        [ Product farm.perTurn farm.product
+                        , Timeout farm.timeout
+                        ]
+
+                OccupiedPlanet (FactoryPlanet factory) ->
+                    svgTwoColumnGrid
+                        { x = cx
+                        , y = cy
+                        }
+                        [ Efficiency factory.efficiency
+                        ]
+
+                OccupiedPlanet (DepositPlanet deposit) ->
+                    svgTwoColumnGrid { x = cx, y = cy }
+                        (Capacity deposit.capacity
+                            :: List.map
+                                (\{ product, quantity } -> Product quantity product)
+                                deposit.content
+                        )
     in
     Svg.g
         [ Svg.Attributes.id (Id.toString id)
         , Svg.Events.onClick (SelectPlanet id)
         , Svg.Attributes.cursor "pointer"
         ]
-        (img :: selectionView)
+        (img :: bottomView :: selectionView)
 
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)

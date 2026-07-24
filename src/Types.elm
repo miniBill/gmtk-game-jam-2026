@@ -61,7 +61,7 @@ type PlanetKind
 type OccupiedPlanet
     = FarmPlanet
         { product : Product
-        , turnsLeft : Int
+        , timeout : Int
         , perTurn : Int
         }
     | FactoryPlanet

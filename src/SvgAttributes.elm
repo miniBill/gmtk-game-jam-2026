@@ -1,4 +1,4 @@
-module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, viewBox, viewBoxWithPadding, width, x, y)
+module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, transformTranslate, viewBox, viewBoxWithPadding, width, x, y)
 
 import Length exposing (Length)
 import Quantity
@@ -76,3 +76,18 @@ ry v =
 fontSize : Float -> Svg.Attribute msg
 fontSize v =
     Svg.Attributes.fontSize (Round.round 4 v)
+
+
+transformTranslate :
+    { x : Float
+    , y : Float
+    }
+    -> Attribute msg
+transformTranslate delta =
+    ("translate("
+        ++ Round.round 4 delta.x
+        ++ " "
+        ++ Round.round 4 delta.y
+        ++ ")"
+    )
+        |> Svg.Attributes.transform
