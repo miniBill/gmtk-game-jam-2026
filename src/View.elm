@@ -99,34 +99,53 @@ viewPlaying model =
         ]
     , case model.selected of
         SelectedNone ->
-            selectionBox [] []
+            Html.text ""
 
         SelectedPlanet planetId ->
             case IdDict.get planetId model.planets of
                 Nothing ->
-                    selectionBox [] []
+                    Html.text ""
 
                 Just planet ->
-                    selectionBox
-                        [ style "align-items" "stretch" ]
+                    bottomBox []
                         (case planet.kind of
                             VirginPlanet options ->
-                                List.map (viewVirginPlanetOption planetId) options
+                                [ Html.p
+                                    [ style "display" "block"
+                                    , style "color" "white"
+                                    , style "text-align" "center"
+                                    , style "font-weight" "bold"
+                                    ]
+                                    [ Html.text "Colonize planet" ]
+                                , selectionRow []
+                                    (List.map (viewVirginPlanetOption planetId) options)
+                                ]
 
                             OccupiedPlanet _ ->
-                                [ Html.text "branch 'OccupiedPlanet _' not implemented" ]
+                                [ Html.div
+                                    [ style "background" "white"
+                                    , style "padding" "8px"
+                                    ]
+                                    [ Html.text "branch 'OccupiedPlanet _' not implemented" ]
+                                ]
                         )
 
         SelectedLink _ ->
-            selectionBox
-                []
-                [ Html.text "branch 'SelectedLink _' not implemented"
+            bottomBox []
+                [ Html.div
+                    [ style "background" "white"
+                    , style "padding" "8px"
+                    ]
+                    [ Html.text "branch 'SelectedLink _' not implemented" ]
                 ]
 
         SelectedEarth ->
-            selectionBox
-                []
-                [ Html.text "branch 'SelectedEarth' not implemented"
+            bottomBox []
+                [ Html.div
+                    [ style "background" "white"
+                    , style "padding" "8px"
+                    ]
+                    [ Html.text "branch 'SelectedEarth' not implemented" ]
                 ]
     ]
 
@@ -163,17 +182,16 @@ viewVirginPlanetOption planetId option =
                     , style "grid-template-columns" "auto auto"
                     , style "text-align" "center"
                     ]
-                    [ Html.div
-                        [ style "padding-bottom" "1px" ]
-                        [ Html.text (String.fromInt perTurn) ]
+                    [ Html.div [] [ Html.text (String.fromInt perTurn) ]
                     , icon []
                         { icon = Data.productToIcon product
                         , title = Data.productToString product
                         }
-                    , Html.div
-                        [ style "padding-bottom" "1px" ]
-                        [ Html.text (String.fromInt turnsLeft) ]
-                    , icon [] { title = "Turns", icon = Phosphor.hourglass }
+                    , Html.div [] [ Html.text (String.fromInt turnsLeft) ]
+                    , icon []
+                        { title = "Turns"
+                        , icon = Phosphor.hourglass
+                        }
                     ]
                 ]
 
@@ -223,18 +241,30 @@ icon attrs config =
             )
 
 
-selectionBox : List (Attribute msg) -> List (Html msg) -> Html msg
-selectionBox attrs children =
+bottomBox : List (Attribute msg) -> List (Html msg) -> Html msg
+bottomBox attrs children =
     Html.div
-        ([ style "border-radius" "8px"
+        ([ style "display" "flex"
+         , style "gap" "16px"
+         , style "flex-direction" "column"
          , style "max-width" "90vw"
-         , style "display" "flex"
-         , style "flex-wrap" "wrap"
-         , style "justify-content" "center"
-         , style "gap" "8px"
          , style "position" "absolute"
          , style "position-anchor" playingFieldAnchor
          , style "position-area" "bottom"
+         ]
+            ++ attrs
+        )
+        children
+
+
+selectionRow : List (Attribute msg) -> List (Html msg) -> Html msg
+selectionRow attrs children =
+    Html.div
+        ([ style "display" "flex"
+         , style "flex-wrap" "wrap"
+         , style "gap" "16px"
+         , style "justify-content" "center"
+         , style "align-items" "stretch"
          ]
             ++ attrs
         )
@@ -250,7 +280,7 @@ viewEarth model =
         ]
         [ if model.selected == SelectedEarth then
             Svg.circle
-                [ SvgAttributes.r (Theme.planetRadius * 1.4)
+                [ SvgAttributes.r (Theme.planetRadius * 1.3)
                 , Svg.Attributes.fill "green"
                 ]
                 []
@@ -323,7 +353,7 @@ viewPlanet selected id planet =
                 [ Svg.circle
                     [ SvgAttributes.cx (Length.inLightYears cx)
                     , SvgAttributes.cy (Length.inLightYears cy)
-                    , SvgAttributes.r (Theme.planetRadius * 1.1)
+                    , SvgAttributes.r (Theme.planetRadius * 1.3)
                     , Svg.Attributes.fill "transparent"
                     , SvgAttributes.strokeWidth 0.024
                     , Svg.Attributes.stroke "green"
