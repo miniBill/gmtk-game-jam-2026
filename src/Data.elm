@@ -1,5 +1,6 @@
-module Data exposing (Product(..), productToIcon, productToRecipe, productToString)
+module Data exposing (Product(..), productToColor, productToIcon, productToRecipe, productToString)
 
+import Color.Oklch as Oklch
 import Phosphor
 
 
@@ -98,3 +99,37 @@ productToRecipe product =
             , { product = Pepper, quantity = 1 }
             ]
                 |> Just
+
+
+productToColor : Product -> String
+productToColor product =
+    let
+        std hue =
+            Oklch.toCssString
+                { lightness = 0.75
+                , chroma = 0.125
+                , hue = hue / 360
+                , alpha = 1
+                }
+    in
+    case product of
+        Grain ->
+            std 105
+
+        Water ->
+            std 230
+
+        Bread ->
+            std 80
+
+        Milk ->
+            "white"
+
+        Cheese ->
+            std 60
+
+        Pepper ->
+            std 18
+
+        Pizza ->
+            std 330

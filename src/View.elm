@@ -149,7 +149,10 @@ viewPlaying model =
                                             ++ " is producing"
                                         )
                                     ]
-                                , htmlTwoColumnGrid []
+                                , htmlTwoColumnGrid
+                                    [ style "align-self" "center"
+                                    , style "color" "white"
+                                    ]
                                     [ Product farm.perTurn farm.product
                                     , Timeout farm.timeout
                                     ]
@@ -207,6 +210,7 @@ viewVirginPlanetOption planetId option =
                     , [ icon [ style "height" "30px" ]
                             { icon = Phosphor.tractor
                             , title = "Farm"
+                            , color = Nothing
                             }
                       , htmlTwoColumnGrid []
                             [ Product perTurn product
@@ -220,6 +224,7 @@ viewVirginPlanetOption planetId option =
                     , [ icon [ style "height" "30px" ]
                             { title = "Factory"
                             , icon = Phosphor.factory
+                            , color = Nothing
                             }
                       , htmlTwoColumnGrid []
                             [ Efficiency efficiency
@@ -232,6 +237,7 @@ viewVirginPlanetOption planetId option =
                     , [ icon [ style "height" "30px" ]
                             { title = "Deposit"
                             , icon = Phosphor.warehouse
+                            , color = Nothing
                             }
                       , htmlTwoColumnGrid []
                             [ Capacity capacity
@@ -292,6 +298,7 @@ gridRowToTuple :
         ( String
         , { icon : Phosphor.IconWeight -> Phosphor.IconVariant
           , title : String
+          , color : Maybe String
           }
         )
 gridRowToTuple gridRow =
@@ -300,6 +307,7 @@ gridRowToTuple gridRow =
             ( String.fromInt quantity
             , { icon = Data.productToIcon product
               , title = Data.productToString product
+              , color = Just (Data.productToColor product)
               }
             )
 
@@ -307,6 +315,7 @@ gridRowToTuple gridRow =
             ( String.fromInt turns
             , { icon = Phosphor.hourglass
               , title = "Turns"
+              , color = Nothing
               }
             )
 
@@ -314,6 +323,7 @@ gridRowToTuple gridRow =
             ( String.fromInt efficiency
             , { icon = Phosphor.speedometer
               , title = "Production per turn"
+              , color = Just "gray"
               }
             )
 
@@ -321,6 +331,7 @@ gridRowToTuple gridRow =
             ( String.fromInt capacity
             , { icon = Phosphor.package
               , title = "Capacity"
+              , color = Just "brown"
               }
             )
 
@@ -330,6 +341,7 @@ icon :
     ->
         { icon : Phosphor.IconWeight -> Phosphor.IconVariant
         , title : String
+        , color : Maybe String
         }
     -> Html msg
 icon attrs config =
@@ -341,7 +353,14 @@ icon attrs config =
         |> Html.div
             (style "height" "16px"
                 :: Html.Attributes.title config.title
-                :: attrs
+                :: (case config.color of
+                        Just color ->
+                            style "color" color
+                                :: attrs
+
+                        Nothing ->
+                            attrs
+                   )
             )
 
 
@@ -441,7 +460,7 @@ gridRowToSvg i row =
         [ rowIcon.icon Phosphor.Duotone
             |> Phosphor.withSize (1.1 * Theme.planetRadius)
             |> Phosphor.withSizeUnit ""
-            |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
+            |> Phosphor.toHtml [ Svg.Attributes.fill (Maybe.withDefault "white" rowIcon.color) ]
         , Svg.text_
             [ SvgAttributes.x (-Theme.planetRadius * 0.25)
             , Svg.Attributes.dominantBaseline "hanging"
