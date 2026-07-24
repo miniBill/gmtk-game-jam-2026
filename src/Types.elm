@@ -33,6 +33,7 @@ type alias PlayingModel =
 type Selected
     = SelectedPlanet (Id PlanetId)
     | SelectedLink (Id LinkId)
+    | SelectedEarth
     | SelectedNone
 
 
@@ -105,3 +106,5 @@ type Msg
 
 type PlayingMsg
     = TryLink (Id PlanetId) (Id PlanetId)
+    | SelectPlanet (Id PlanetId)
+    | SelectEarth

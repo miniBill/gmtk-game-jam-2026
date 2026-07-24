@@ -12,7 +12,8 @@ import Point2d
 import Quantity
 import Svg exposing (Svg)
 import Svg.Attributes
-import Types exposing (Link, Model, Msg(..), Page(..), Planet, PlayingModel, PlayingMsg)
+import Svg.Events
+import Types exposing (Link, Model, Msg(..), Page(..), Planet, PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -87,27 +88,48 @@ viewPlaying audioData model playingModel =
     ]
 
 
+planetRadius : Float
+planetRadius =
+    0.1
+
+
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
     Svg.circle
-        [ Svg.Attributes.r "0.1"
+        [ Svg.Attributes.r (String.fromFloat (1.1 * planetRadius))
         , Svg.Attributes.fill "#55f"
+        , Svg.Events.onClick SelectEarth
+        , if model.selected == SelectedEarth then
+            Svg.Attributes.stroke "red"
+
+          else
+            Svg.Attributes.stroke "green"
+        , Svg.Attributes.strokeWidth "0.025"
+        , Svg.Attributes.cursor "pointer"
         ]
         []
 
 
 viewPlanets : PlayingModel -> List (Svg PlayingMsg)
 viewPlanets model =
-    IdDict.fold (\k v acc -> viewPlanet k v :: acc) [] model.planets
+    IdDict.fold (\k v acc -> viewPlanet model.selected k v :: acc) [] model.planets
 
 
-viewPlanet : Id PlanetId -> Planet -> Svg PlayingMsg
-viewPlanet id planet =
+viewPlanet : Selected -> Id PlanetId -> Planet -> Svg PlayingMsg
+viewPlanet selected id planet =
     Svg.circle
-        [ Svg.Attributes.r "0.1"
+        [ Svg.Attributes.r (String.fromFloat planetRadius)
         , cx (Point2d.xCoordinate planet.position)
         , cy (Point2d.yCoordinate planet.position)
         , Svg.Attributes.fill "#5f5"
+        , Svg.Events.onClick (SelectPlanet id)
+        , if selected == SelectedPlanet id then
+            Svg.Attributes.stroke "red"
+
+          else
+            Svg.Attributes.stroke "green"
+        , Svg.Attributes.strokeWidth "0.025"
+        , Svg.Attributes.cursor "pointer"
         ]
         []
 

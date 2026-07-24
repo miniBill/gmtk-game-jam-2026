@@ -108,6 +108,25 @@ updatePlaying msg model =
         TryLink from to ->
             ( model, Cmd.none )
 
+        SelectPlanet id ->
+            let
+                new : Selected
+                new =
+                    SelectedPlanet id
+            in
+            if new == model.selected then
+                ( { model | selected = SelectedNone }, Cmd.none )
+
+            else
+                ( { model | selected = new }, Cmd.none )
+
+        SelectEarth ->
+            if SelectedEarth == model.selected then
+                ( { model | selected = SelectedNone }, Cmd.none )
+
+            else
+                ( { model | selected = SelectedEarth }, Cmd.none )
+
 
 updatePlanets : PlayingModel -> PlayingModel
 updatePlanets model =
