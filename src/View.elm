@@ -406,38 +406,40 @@ svgTwoColumnGrid :
     -> Svg msg
 svgTwoColumnGrid config rows =
     rows
-        |> List.indexedMap
-            (\i row ->
-                let
-                    ( text, rowIcon ) =
-                        gridRowToTuple row
-                in
-                Svg.g
-                    [ SvgAttributes.transformTranslate
-                        { x = -Theme.planetRadius * 0.2
-                        , y = (toFloat i + 0.9) * Theme.planetRadius * 1.4
-                        }
-                    ]
-                    [ rowIcon.icon Phosphor.Duotone
-                        |> Phosphor.withSize (1.2 * Theme.planetRadius)
-                        |> Phosphor.withSizeUnit ""
-                        |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
-                    , Svg.text_
-                        [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-                        , Svg.Attributes.dominantBaseline "hanging"
-                        , Svg.Attributes.textAnchor "end"
-                        , SvgAttributes.fontSize (1.2 * Theme.planetRadius)
-                        , Svg.Attributes.fill "white"
-                        ]
-                        [ Svg.text text ]
-                    ]
-            )
+        |> List.indexedMap gridRowToSvg
         |> Svg.g
             [ SvgAttributes.transformTranslate
                 { x = Length.inLightYears config.x
                 , y = Length.inLightYears config.y
                 }
             ]
+
+
+gridRowToSvg : Int -> GridRow -> Svg msg
+gridRowToSvg i row =
+    let
+        ( text, rowIcon ) =
+            gridRowToTuple row
+    in
+    Svg.g
+        [ SvgAttributes.transformTranslate
+            { x = 0
+            , y = (toFloat i + 1.1) * Theme.planetRadius * 1.3
+            }
+        ]
+        [ rowIcon.icon Phosphor.Duotone
+            |> Phosphor.withSize (1.1 * Theme.planetRadius)
+            |> Phosphor.withSizeUnit ""
+            |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
+        , Svg.text_
+            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+            , Svg.Attributes.dominantBaseline "hanging"
+            , Svg.Attributes.textAnchor "end"
+            , SvgAttributes.fontSize (1.1 * Theme.planetRadius)
+            , Svg.Attributes.fill "white"
+            ]
+            [ Svg.text text ]
+        ]
 
 
 viewPlanets : PlayingModel -> List (Svg PlayingMsg)
