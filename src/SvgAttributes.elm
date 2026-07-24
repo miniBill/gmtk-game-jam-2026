@@ -10,7 +10,7 @@ import Svg.Attributes
 viewBox : Length -> Length -> Length -> Length -> String
 viewBox minx_ miny_ width_ height_ =
     [ minx_, miny_, width_, height_ ]
-        |> List.map (\l -> Round.round 2 (Length.inLightYears l))
+        |> List.map (\l -> Round.round 4 (Length.inLightYears l))
         |> String.join " "
 
 
@@ -25,49 +25,49 @@ viewBoxWithPadding padding minx_ miny_ width_ height_ =
 
 strokeWidth : Float -> Attribute msg
 strokeWidth v =
-    Svg.Attributes.strokeWidth (Round.round 3 v)
+    Svg.Attributes.strokeWidth (Round.round 5 v)
 
 
 x : Float -> Attribute msg
 x v =
-    Svg.Attributes.x (Round.round 2 v)
+    Svg.Attributes.x (Round.round 4 v)
 
 
 y : Float -> Attribute msg
 y v =
-    Svg.Attributes.y (Round.round 2 v)
+    Svg.Attributes.y (Round.round 4 v)
 
 
 width : Float -> Attribute msg
 width v =
-    Svg.Attributes.width (Round.round 2 v)
+    Svg.Attributes.width (Round.round 4 v)
 
 
 height : Float -> Attribute msg
 height v =
-    Svg.Attributes.height (Round.round 2 v)
+    Svg.Attributes.height (Round.round 4 v)
 
 
 cx : Float -> Attribute msg
 cx v =
-    Svg.Attributes.cx (Round.round 2 v)
+    Svg.Attributes.cx (Round.round 4 v)
 
 
 cy : Float -> Attribute msg
 cy v =
-    Svg.Attributes.cy (Round.round 2 v)
+    Svg.Attributes.cy (Round.round 4 v)
 
 
 r : Float -> Attribute msg
 r v =
-    Svg.Attributes.r (Round.round 2 v)
+    Svg.Attributes.r (Round.round 4 v)
 
 
 rx : Float -> Svg.Attribute msg
 rx v =
-    Svg.Attributes.rx (Round.round 2 v)
+    Svg.Attributes.rx (Round.round 4 v)
 
 
 ry : Float -> Svg.Attribute msg
 ry v =
-    Svg.Attributes.ry (Round.round 2 v)
+    Svg.Attributes.ry (Round.round 4 v)

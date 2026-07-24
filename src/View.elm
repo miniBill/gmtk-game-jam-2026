@@ -2,12 +2,14 @@ module View exposing (view)
 
 import Audio exposing (AudioData)
 import BoundingBox2d exposing (BoundingBox2d)
-import Html exposing (Html)
-import Html.Attributes
+import Data
+import Html exposing (Attribute, Html)
+import Html.Attributes exposing (style)
 import Html.Events
 import Id exposing (Id, LinkId, PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
+import Phosphor
 import Point2d
 import Quantity
 import Svg exposing (Svg)
@@ -21,13 +23,14 @@ import Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Plane
 view : AudioData -> Model -> Html Msg
 view audioData model =
     Html.main_
-        [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "gap" "8px"
-        , Html.Attributes.style "align-items" "center"
-        , Html.Attributes.style "justify-content" "center"
-        , Html.Attributes.style "padding" "8px"
-        , Html.Attributes.style "width" "100vw"
-        , Html.Attributes.style "height" "100dvh"
+        [ style "display" "flex"
+        , style "flex-direction" "column"
+        , style "gap" "8px"
+        , style "align-items" "center"
+        , style "justify-content" "center"
+        , style "padding" "8px"
+        , style "width" "100vw"
+        , style "height" "100dvh"
         ]
         (case model.page of
             Menu ->
@@ -43,17 +46,17 @@ view audioData model =
                 ]
 
             Playing playingModel ->
-                viewPlaying audioData model playingModel
+                viewPlaying playingModel
                     |> List.map (Html.map PlayingMsg)
         )
 
 
-viewPlaying : AudioData -> Model -> PlayingModel -> List (Html PlayingMsg)
-viewPlaying audioData model playingModel =
+viewPlaying : PlayingModel -> List (Html PlayingMsg)
+viewPlaying model =
     let
         boundingBox : BoundingBox2d Meters ()
         boundingBox =
-            playingModel.planets
+            model.planets
                 |> IdDict.values
                 |> List.map .position
                 |> BoundingBox2d.hull Point2d.origin
@@ -75,24 +78,164 @@ viewPlaying audioData model playingModel =
                 (Quantity.difference maxY minY)
     in
     [ Svg.svg
-        [ Html.Attributes.style "width" "100%"
-        , Html.Attributes.style "height" "auto"
+        [ style "width" "100%"
+        , style "height" "auto"
         , Svg.Attributes.viewBox viewBox
         ]
-        [ viewEarth playingModel
+        [ viewEarth model
         , Svg.g
             [ Svg.Attributes.id "planets" ]
-            (viewPlanets playingModel)
+            (viewPlanets model)
         , Svg.g [ Svg.Attributes.id "links" ]
-            (viewLinks playingModel)
+            (viewLinks model)
         ]
+    , case model.selected of
+        SelectedNone ->
+            selectionBox [] []
+
+        SelectedPlanet planetId ->
+            case IdDict.get planetId model.planets of
+                Nothing ->
+                    selectionBox [] []
+
+                Just planet ->
+                    selectionBox
+                        [ style "align-items" "stretch" ]
+                        (case planet.kind of
+                            VirginPlanet options ->
+                                List.map (viewVirginPlanetOption planetId) options
+
+                            OccupiedPlanet _ ->
+                                [ Html.text "branch 'OccupiedPlanet _' not implemented" ]
+                        )
+
+        SelectedLink _ ->
+            selectionBox
+                []
+                [ Html.text "branch 'SelectedLink _' not implemented"
+                ]
+
+        SelectedEarth ->
+            selectionBox
+                []
+                [ Html.text "branch 'SelectedEarth' not implemented"
+                ]
     ]
+
+
+viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
+viewVirginPlanetOption planetId option =
+    Html.div
+        [ style "border-radius" "4px"
+        , style "gap" "4px"
+        , style "padding" "4px"
+        , style "display" "flex"
+        , style "flex-direction" "column"
+        , style "align-items" "center"
+        , style "background-color" "lightgray"
+        , style "width" "60px"
+        , Html.Attributes.class "on-hover-highlight"
+        , Html.Events.onClick (OccupyPlanet planetId option)
+        ]
+        (case option of
+            FarmPlanet { product, turnsLeft, perTurn } ->
+                [ icon [ style "height" "30px" ]
+                    { icon = Phosphor.tractor
+                    , title = "Farm"
+                    }
+                , Html.div
+                    [ style "display" "grid"
+                    , style "gap" "2px"
+                    , style "align-items" "center"
+                    , style "grid-template-columns" "auto auto"
+                    , style "text-align" "center"
+                    ]
+                    [ Html.div
+                        [ style "padding-bottom" "1px" ]
+                        [ Html.text (String.fromInt perTurn) ]
+                    , icon []
+                        { icon = Data.productToIcon product
+                        , title = Data.productToString product
+                        }
+                    , Html.div
+                        [ style "padding-bottom" "1px" ]
+                        [ Html.text (String.fromInt turnsLeft) ]
+                    , icon [] { title = "Turns", icon = Phosphor.hourglass }
+                    ]
+                ]
+
+            FactoryPlanet _ ->
+                [ Phosphor.factory Phosphor.Duotone
+                    |> Phosphor.withSize 100
+                    |> Phosphor.withSizeUnit "%"
+                    |> Phosphor.toHtml []
+                    |> List.singleton
+                    |> Html.div
+                        [ style "width" "50%"
+                        , Html.Attributes.title "Factory"
+                        ]
+                ]
+
+            DepositPlanet _ ->
+                [ Phosphor.warehouse Phosphor.Duotone
+                    |> Phosphor.withSize 100
+                    |> Phosphor.withSizeUnit "%"
+                    |> Phosphor.toHtml []
+                    |> List.singleton
+                    |> Html.div
+                        [ style "width" "50%"
+                        , Html.Attributes.title "Deposit"
+                        ]
+                ]
+        )
+
+
+icon :
+    List (Attribute msg)
+    ->
+        { icon : Phosphor.IconWeight -> Phosphor.IconVariant
+        , title : String
+        }
+    -> Html msg
+icon attrs config =
+    config.icon Phosphor.Duotone
+        |> Phosphor.withSize 100
+        |> Phosphor.withSizeUnit "%"
+        |> Phosphor.toHtml []
+        |> List.singleton
+        |> Html.div
+            (style "height" "16px"
+                :: Html.Attributes.title config.title
+                :: attrs
+            )
+
+
+selectionBox : List (Attribute msg) -> List (Html msg) -> Html msg
+selectionBox attrs children =
+    Html.div
+        ([ style "height" "100px"
+         , style "border-radius" "8px"
+         , style "display" "flex"
+         , style "gap" "8px"
+         ]
+            ++ attrs
+        )
+        children
 
 
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
     Svg.g [ Svg.Attributes.id "earth" ]
-        [ Svg.image
+        [ if model.selected == SelectedEarth then
+            Svg.circle
+                [ SvgAttributes.r (Theme.planetRadius * 1.4)
+                , Svg.Attributes.fill "green"
+                ]
+                []
+
+          else
+            Svg.text ""
+        , Svg.image
             [ SvgAttributes.x -Theme.planetRadius
             , SvgAttributes.y -Theme.planetRadius
             , SvgAttributes.width (Theme.planetRadius * 2)
@@ -102,17 +245,6 @@ viewEarth model =
             , Svg.Attributes.cursor "pointer"
             ]
             []
-        , if model.selected == SelectedEarth then
-            Svg.circle
-                [ SvgAttributes.r (Theme.planetRadius * 1.1)
-                , Svg.Attributes.fill "transparent"
-                , SvgAttributes.strokeWidth 0.024
-                , Svg.Attributes.stroke "green"
-                ]
-                []
-
-          else
-            Svg.text ""
         ]
 
 

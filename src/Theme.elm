@@ -3,7 +3,7 @@ module Theme exposing (planetBarren, planetBlackHole, planetIce, planetLava, pla
 
 planetRadius : Float
 planetRadius =
-    0.1
+    0.125
 
 
 planetBarren : String

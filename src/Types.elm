@@ -1,7 +1,8 @@
-module Types exposing (..)
+module Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
-import Id exposing (Id, LinkId, PlanetId, ProductId)
+import Data exposing (Product)
+import Id exposing (Id, LinkId, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import Point2d exposing (Point2d)
@@ -42,7 +43,7 @@ type alias Link =
     , to : Id PlanetId
     , transport :
         List
-            { product : Id ProductId
+            { product : Product
             , quantity : Int
             }
     }
@@ -62,35 +63,24 @@ type PlanetKind
 
 type OccupiedPlanet
     = FarmPlanet
-        { product : Id ProductId
+        { product : Product
         , turnsLeft : Int
         , perTurn : Int
         }
     | FactoryPlanet
         { efficiency : Int
-        , order : Maybe FactoryOrder
-        , incoming : IdDict ProductId Int -- quantity
+        , order : Maybe Product
+        , deposit : List { product : Product, quantity : Int }
         }
     | DepositPlanet
         { capacity : Int
-        , content : IdDict ProductId Int -- quantity
+        , content : List { product : Product, quantity : Int }
         }
-
-
-type alias FactoryOrder =
-    Id ProductId
-
-
-type alias Product =
-    { name : String
-    , icon : String
-    , recipe : Maybe Recipe
-    }
 
 
 type alias Recipe =
     List
-        { product : Id ProductId
+        { product : Product
         , quantity : Int
         }
 
@@ -108,3 +98,4 @@ type PlayingMsg
     = TryLink (Id PlanetId) (Id PlanetId)
     | SelectPlanet (Id PlanetId)
     | SelectEarth
+    | OccupyPlanet (Id PlanetId) OccupiedPlanet

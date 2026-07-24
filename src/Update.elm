@@ -2,7 +2,8 @@ module Update exposing (init, update)
 
 import Angle
 import Audio exposing (AudioCmd, AudioData)
-import Id exposing (Id(..), PlanetId, ProductId)
+import Data exposing (Product(..))
+import Id exposing (Id(..), PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
 import Point2d exposing (Point2d)
@@ -127,6 +128,18 @@ updatePlaying msg model =
             else
                 ( { model | selected = SelectedEarth }, Cmd.none )
 
+        OccupyPlanet id kind ->
+            ( { model
+                | planets =
+                    IdDict.updateIfExists
+                        id
+                        (\planet -> { planet | kind = OccupiedPlanet kind })
+                        model.planets
+              }
+                |> updatePlanets
+            , Cmd.none
+            )
+
 
 updatePlanets : PlayingModel -> PlayingModel
 updatePlanets model =
@@ -234,7 +247,7 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
                                     (\efficiency ->
                                         FactoryPlanet
                                             { efficiency = efficiency
-                                            , incoming = IdDict.empty
+                                            , deposit = []
                                             , order = Nothing
                                             }
                                     )
@@ -249,7 +262,7 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
                                     (\capacity ->
                                         DepositPlanet
                                             { capacity = capacity
-                                            , content = IdDict.empty
+                                            , content = []
                                             }
                                     )
                                     (Random.int 5 10)
@@ -275,9 +288,16 @@ type PlanetKindWithoutData
     | DepositKind
 
 
-randomProduct : Random.Generator (Id ProductId)
+randomProduct : Random.Generator Product
 randomProduct =
-    Random.map Id (Random.int 1 3)
+    Random.weighted
+        ( 1, Water )
+        [ ( 1, Grain )
+        , ( 1, Bread )
+        , ( 1, Cheese )
+        , ( 1, Pepper )
+        , ( 1, Pizza )
+        ]
 
 
 nameGenerator : Random.Generator String
