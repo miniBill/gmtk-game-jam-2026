@@ -1,4 +1,4 @@
-module Id exposing (Id(..), LinkId, PlanetId, ProductId)
+module Id exposing (Id(..), LinkId, PlanetId, ProductId, toString)
 
 
 type PlanetId
@@ -15,3 +15,8 @@ type LinkId
 
 type Id a
     = Id Int
+
+
+toString : Id kind -> String
+toString (Id id) =
+    String.fromInt id

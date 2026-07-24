@@ -1,4 +1,4 @@
-module Theme exposing (planetBaren, planetBlack_hole, planetIce, planetLava, planetRadius, planetTerran)
+module Theme exposing (planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
 
 
 planetRadius : Float
@@ -6,8 +6,8 @@ planetRadius =
     0.1
 
 
-planetBaren : String
-planetBaren =
+planetBarren : String
+planetBarren =
     "media/Planets/Baren.png"
 
 
@@ -26,6 +26,6 @@ planetTerran =
     "media/Planets/Terran.png"
 
 
-planetBlack_hole : String
-planetBlack_hole =
+planetBlackHole : String
+planetBlackHole =
     "media/Planets/Black_hole.png"
