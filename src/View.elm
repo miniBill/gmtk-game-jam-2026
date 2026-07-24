@@ -92,19 +92,38 @@ viewPlaying audioData model playingModel =
 
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
-    Svg.circle
-        [ Svg.Attributes.r (Round.round 2 (1.1 * Theme.planetRadius))
-        , Svg.Attributes.fill "#55f"
-        , Svg.Events.onClick SelectEarth
+    let
+        x : Float
+        x =
+            -Theme.planetRadius
+
+        y : Float
+        y =
+            -Theme.planetRadius
+    in
+    Svg.g [ Svg.Attributes.id "earth" ]
+        [ Svg.image
+            [ Svg.Attributes.x (Round.round 2 x)
+            , Svg.Attributes.y (Round.round 2 y)
+            , Svg.Attributes.width (Round.round 2 (Theme.planetRadius * 2))
+            , Svg.Attributes.height (Round.round 2 (Theme.planetRadius * 2))
+            , Svg.Attributes.xlinkHref Theme.planetTerran
+            , Svg.Events.onClick SelectEarth
+            , Svg.Attributes.cursor "pointer"
+            ]
+            []
         , if model.selected == SelectedEarth then
-            Svg.Attributes.stroke "red"
+            Svg.circle
+                [ Svg.Attributes.r (Round.round 2 (Theme.planetRadius * 1.1))
+                , Svg.Attributes.fill "transparent"
+                , Svg.Attributes.strokeWidth "0.024"
+                , Svg.Attributes.stroke "red"
+                ]
+                []
 
           else
-            Svg.Attributes.stroke "green"
-        , Svg.Attributes.strokeWidth "0.025"
-        , Svg.Attributes.cursor "pointer"
+            Svg.text ""
         ]
-        []
 
 
 viewPlanets : PlayingModel -> List (Svg PlayingMsg)
