@@ -136,7 +136,26 @@ viewPlaying model =
                                     (List.map (viewVirginPlanetOption planetId) options)
                                 ]
 
-                            OccupiedPlanet _ ->
+                            OccupiedPlanet (FarmPlanet farm) ->
+                                [ Html.p
+                                    [ style "display" "block"
+                                    , style "color" "white"
+                                    , style "text-align" "center"
+                                    , style "font-weight" "bold"
+                                    ]
+                                    [ Html.text
+                                        ("The planet "
+                                            ++ String.Extra.toSentenceCase planet.name
+                                            ++ " is producing"
+                                        )
+                                    ]
+                                , htmlTwoColumnGrid []
+                                    [ Product farm.perTurn farm.product
+                                    , Timeout farm.timeout
+                                    ]
+                                ]
+
+                            _ ->
                                 [ Html.div
                                     [ style "background" "white"
                                     , style "padding" "8px"
@@ -164,7 +183,7 @@ viewPlaying model =
                     , Html.span
                         [ style "font-weight" "bold" ]
                         [ Html.text "needs" ]
-                    , htmlTwoColumnGrid
+                    , htmlTwoColumnGrid []
                         [ Product model.earthNeed.quantity model.earthNeed.product
                         , Timeout model.earthNeed.timeout
                         ]
@@ -189,11 +208,10 @@ viewVirginPlanetOption planetId option =
                             { icon = Phosphor.tractor
                             , title = "Farm"
                             }
-                      , productAndTurns
-                            { quantity = perTurn
-                            , product = product
-                            , turns = timeout
-                            }
+                      , htmlTwoColumnGrid []
+                            [ Product perTurn product
+                            , Timeout timeout
+                            ]
                       ]
                     )
 
@@ -203,7 +221,9 @@ viewVirginPlanetOption planetId option =
                             { title = "Factory"
                             , icon = Phosphor.factory
                             }
-                      , htmlTwoColumnGrid [ Efficiency efficiency ]
+                      , htmlTwoColumnGrid []
+                            [ Efficiency efficiency
+                            ]
                       ]
                     )
 
@@ -213,7 +233,9 @@ viewVirginPlanetOption planetId option =
                             { title = "Deposit"
                             , icon = Phosphor.warehouse
                             }
-                      , htmlTwoColumnGrid [ Capacity capacity ]
+                      , htmlTwoColumnGrid []
+                            [ Capacity capacity
+                            ]
                       ]
                     )
     in
@@ -232,28 +254,17 @@ viewVirginPlanetOption planetId option =
         children
 
 
-productAndTurns :
-    { quantity : Int
-    , product : Data.Product
-    , turns : Int
-    }
-    -> Html msg
-productAndTurns { quantity, product, turns } =
-    htmlTwoColumnGrid
-        [ Product quantity product
-        , Timeout turns
-        ]
-
-
-htmlTwoColumnGrid : List GridRow -> Html msg
-htmlTwoColumnGrid children =
+htmlTwoColumnGrid : List (Attribute msg) -> List GridRow -> Html msg
+htmlTwoColumnGrid attrs children =
     Html.div
-        [ style "display" "grid"
-        , style "gap" "2px"
-        , style "align-items" "center"
-        , style "grid-template-columns" "auto auto"
-        , style "text-align" "center"
-        ]
+        ([ style "display" "grid"
+         , style "gap" "2px"
+         , style "align-items" "center"
+         , style "grid-template-columns" "auto auto"
+         , style "text-align" "center"
+         ]
+            ++ attrs
+        )
         (List.concatMap gridRowToHtml children)
 
 
@@ -577,4 +588,4 @@ viewLinks model =
 
 viewLink : Id LinkId -> Link -> Svg PlayingMsg
 viewLink id link =
-    Svg.text_ [] [ Svg.text "TODO: viewPlanet" ]
+    Svg.text_ [] [ Svg.text "TODO: viewLink" ]
