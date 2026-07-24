@@ -13,9 +13,10 @@
     <script src="./build/main.js"></script>
     <script src="./elm-audio.js"></script>
     <script>
-        Elm.Main.init({
+        const app = Elm.Main.init({
             node: document.querySelector("main")
         })
+        startAudio(app);
     </script>
 </body>
 
