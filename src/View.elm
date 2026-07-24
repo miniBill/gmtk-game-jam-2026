@@ -13,6 +13,7 @@ import Quantity
 import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
+import Theme
 import Types exposing (Link, Model, Msg(..), Page(..), Planet, PlayingModel, PlayingMsg(..), Selected(..))
 
 
@@ -88,15 +89,10 @@ viewPlaying audioData model playingModel =
     ]
 
 
-planetRadius : Float
-planetRadius =
-    0.1
-
-
 viewEarth : PlayingModel -> Svg PlayingMsg
 viewEarth model =
     Svg.circle
-        [ Svg.Attributes.r (String.fromFloat (1.1 * planetRadius))
+        [ Svg.Attributes.r (String.fromFloat (1.1 * Theme.planetRadius))
         , Svg.Attributes.fill "#55f"
         , Svg.Events.onClick SelectEarth
         , if model.selected == SelectedEarth then
@@ -118,7 +114,7 @@ viewPlanets model =
 viewPlanet : Selected -> Id PlanetId -> Planet -> Svg PlayingMsg
 viewPlanet selected id planet =
     Svg.circle
-        [ Svg.Attributes.r (String.fromFloat planetRadius)
+        [ Svg.Attributes.r (String.fromFloat Theme.planetRadius)
         , cx (Point2d.xCoordinate planet.position)
         , cy (Point2d.yCoordinate planet.position)
         , Svg.Attributes.fill "#5f5"
