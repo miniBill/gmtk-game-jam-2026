@@ -16,12 +16,12 @@ import Types exposing (Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, Pla
 
 minimumPlanetDistance : Length
 minimumPlanetDistance =
-    Length.lightYears 0.25
+    Length.lightYears 0.75
 
 
 maximumLinkLength : Length
 maximumLinkLength =
-    Length.lightYears 1
+    Length.lightYears 1.5
 
 
 ringWidth : Length
@@ -184,11 +184,11 @@ updatePlanets model =
                     |> Length.inLightYears
                     |> (\n -> n / 2)
                     |> ceiling
-                    |> (+) 3
+                    |> (+) 10
         in
         List.foldl
             (\_ m ->
-                addPlanet maximumDistanceSeen m
+                addPlanet 100 maximumDistanceSeen m
             )
             model
             (List.range 1 toAdd)
@@ -197,8 +197,8 @@ updatePlanets model =
         model
 
 
-addPlanet : Length -> PlayingModel -> PlayingModel
-addPlanet fromDistance model =
+addPlanet : Float -> Length -> PlayingModel -> PlayingModel
+addPlanet budget fromDistance model =
     let
         ( planet, nextSeed ) =
             Random.step planetGenerator model.currentSeed
@@ -222,8 +222,8 @@ addPlanet fromDistance model =
                                 model.planets
                         then
                             Random.weighted
-                                ( 75, RetryGeneration )
-                                [ ( 25, GiveUpGeneration ) ]
+                                ( budget, RetryGeneration )
+                                [ ( 1, GiveUpGeneration ) ]
 
                         else
                             Random.constant (PlanetGenerated generated)
@@ -260,7 +260,7 @@ addPlanet fromDistance model =
             }
 
         RetryGeneration ->
-            addPlanet fromDistance { model | currentSeed = nextSeed }
+            addPlanet (budget - 5) fromDistance { model | currentSeed = nextSeed }
 
 
 occupiedPlanetGenerator : Random.Generator OccupiedPlanet
