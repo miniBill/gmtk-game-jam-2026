@@ -1,4 +1,4 @@
-module Data exposing (Product(..), productToIcon, productToString)
+module Data exposing (Product(..), productToIcon, productToRecipe, productToString)
 
 import Phosphor
 
@@ -10,6 +10,7 @@ type Product
     | Cheese
     | Pepper
     | Pizza
+    | Milk
 
 
 productToIcon :
@@ -36,6 +37,9 @@ productToIcon product =
         Pizza ->
             Phosphor.pizza
 
+        Milk ->
+            Phosphor.cow
+
 
 productToString : Product -> String
 productToString product =
@@ -57,3 +61,40 @@ productToString product =
 
         Pizza ->
             "Pizza"
+
+        Milk ->
+            "Milk"
+
+
+productToRecipe : Product -> Maybe (List { product : Product, quantity : number })
+productToRecipe product =
+    case product of
+        Grain ->
+            Nothing
+
+        Water ->
+            Nothing
+
+        Bread ->
+            [ { product = Grain, quantity = 2 }
+            , { product = Water, quantity = 1 }
+            ]
+                |> Just
+
+        Cheese ->
+            [ { product = Milk, quantity = 2 }
+            ]
+                |> Just
+
+        Pepper ->
+            Nothing
+
+        Milk ->
+            Nothing
+
+        Pizza ->
+            [ { product = Bread, quantity = 1 }
+            , { product = Cheese, quantity = 1 }
+            , { product = Pepper, quantity = 1 }
+            ]
+                |> Just

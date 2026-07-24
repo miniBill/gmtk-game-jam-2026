@@ -41,11 +41,7 @@ type Selected
 type alias Link =
     { from : Id PlanetId
     , to : Id PlanetId
-    , transport :
-        List
-            { product : Product
-            , quantity : Int
-            }
+    , transport : List { product : Product, quantity : Int }
     }
 
 

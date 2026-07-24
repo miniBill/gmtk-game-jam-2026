@@ -21,7 +21,7 @@ import Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Plane
 
 
 view : AudioData -> Model -> Html Msg
-view audioData model =
+view _ model =
     Html.main_
         [ style "display" "flex"
         , style "flex-direction" "column"
