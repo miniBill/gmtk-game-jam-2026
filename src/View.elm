@@ -408,13 +408,29 @@ svgTwoColumnGrid config rows =
     rows
         |> List.indexedMap
             (\i row ->
+                let
+                    ( text, rowIcon ) =
+                        gridRowToTuple row
+                in
                 Svg.g
                     [ SvgAttributes.transformTranslate
                         { x = -Theme.planetRadius * 0.2
-                        , y = (toFloat i + 0.9) * Theme.planetRadius * 1.75
+                        , y = (toFloat i + 0.9) * Theme.planetRadius * 1.4
                         }
                     ]
-                    (gridRowToSvg row)
+                    [ rowIcon.icon Phosphor.Duotone
+                        |> Phosphor.withSize (1.2 * Theme.planetRadius)
+                        |> Phosphor.withSizeUnit ""
+                        |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
+                    , Svg.text_
+                        [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+                        , Svg.Attributes.dominantBaseline "hanging"
+                        , Svg.Attributes.textAnchor "end"
+                        , SvgAttributes.fontSize (1.2 * Theme.planetRadius)
+                        , Svg.Attributes.fill "white"
+                        ]
+                        [ Svg.text text ]
+                    ]
             )
         |> Svg.g
             [ SvgAttributes.transformTranslate
@@ -422,27 +438,6 @@ svgTwoColumnGrid config rows =
                 , y = Length.inLightYears config.y
                 }
             ]
-
-
-gridRowToSvg : GridRow -> List (Svg msg)
-gridRowToSvg gridRow =
-    let
-        ( text, rowIcon ) =
-            gridRowToTuple gridRow
-    in
-    [ rowIcon.icon Phosphor.Duotone
-        |> Phosphor.withSize (1.5 * Theme.planetRadius)
-        |> Phosphor.withSizeUnit ""
-        |> Phosphor.toHtml [ Svg.Attributes.fill "white" ]
-    , Svg.text_
-        [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-        , Svg.Attributes.dominantBaseline "hanging"
-        , Svg.Attributes.textAnchor "end"
-        , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
-        , Svg.Attributes.fill "white"
-        ]
-        [ Svg.text text ]
-    ]
 
 
 viewPlanets : PlayingModel -> List (Svg PlayingMsg)
@@ -513,8 +508,32 @@ viewPlanet selected id planet =
 
         bottomView =
             case planet.kind of
-                VirginPlanet _ ->
-                    Svg.text ""
+                VirginPlanet options ->
+                    options
+                        |> List.filterMap
+                            (\option ->
+                                case option of
+                                    FarmPlanet farm ->
+                                        let
+                                            quantity : Int
+                                            quantity =
+                                                farm.perTurn * farm.timeout
+                                        in
+                                        ( -quantity, Product quantity farm.product )
+                                            |> Just
+
+                                    FactoryPlanet _ ->
+                                        Nothing
+
+                                    DepositPlanet _ ->
+                                        Nothing
+                            )
+                        |> List.sortBy Tuple.first
+                        |> List.map Tuple.second
+                        |> svgTwoColumnGrid
+                            { x = cx
+                            , y = cy
+                            }
 
                 OccupiedPlanet (FarmPlanet farm) ->
                     svgTwoColumnGrid

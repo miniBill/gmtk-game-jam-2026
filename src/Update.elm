@@ -258,7 +258,7 @@ addPlanet budget fromDistance model =
                     (farmOptions ++ [ factoryOption, depositOption ])
                         |> VirginPlanet
                 )
-                (Random.list 5 farmGenerator)
+                (Random.list 3 farmGenerator)
                 factoryGenerator
                 depositGenerator
     in
