@@ -1,4 +1,4 @@
-module SvgAttributes exposing (cx, cy, height, r, rx, ry, strokeWidth, viewBox, viewBoxWithPadding, width, x, y)
+module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, viewBox, viewBoxWithPadding, width, x, y)
 
 import Length exposing (Length)
 import Quantity
@@ -71,3 +71,8 @@ rx v =
 ry : Float -> Svg.Attribute msg
 ry v =
     Svg.Attributes.ry (Round.round 4 v)
+
+
+fontSize : Float -> Svg.Attribute msg
+fontSize v =
+    Svg.Attributes.fontSize (Round.round 4 v)

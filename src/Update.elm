@@ -65,13 +65,7 @@ update audioData msg model =
         InitialSeed initialSeed ->
             ( { model
                 | page =
-                    { initialSeed = initialSeed
-                    , currentSeed = Random.initialSeed initialSeed
-                    , links = IdDict.empty
-                    , maximumDistanceReched = Quantity.zero
-                    , planets = IdDict.empty
-                    , selected = SelectedNone
-                    }
+                    initPlayingModel initialSeed
                         |> updatePlanets
                         |> Playing
               }
@@ -106,6 +100,18 @@ update audioData msg model =
                     , Cmd.map PlayingMsg cmd
                     , Audio.cmdNone
                     )
+
+
+initPlayingModel : Int -> PlayingModel
+initPlayingModel initialSeed =
+    { initialSeed = initialSeed
+    , currentSeed = Random.initialSeed initialSeed
+    , links = IdDict.empty
+    , maximumDistanceReched = Quantity.zero
+    , planets = IdDict.empty
+    , selected = SelectedNone
+    , earthNeed = { product = Water, quantity = 1, timeout = 10 }
+    }
 
 
 updatePlaying : PlayingMsg -> PlayingModel -> ( PlayingModel, Cmd PlayingMsg )

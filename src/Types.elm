@@ -28,6 +28,7 @@ type alias PlayingModel =
     , planets : IdDict PlanetId Planet
     , links : IdDict LinkId Link
     , selected : Selected
+    , earthNeed : { product : Product, quantity : Int, timeout : Int }
     }
 
 

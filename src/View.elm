@@ -300,6 +300,13 @@ viewEarth model =
             , Svg.Attributes.xlinkHref Theme.planetTerran
             ]
             []
+        , Phosphor.hourglass Phosphor.Duotone
+            |> Phosphor.withSize Theme.planetRadius
+            |> Phosphor.withSizeUnit ""
+            |> Phosphor.toHtml [ SvgAttributes.y Theme.planetRadius ]
+        , Svg.text_
+            [ SvgAttributes.fontSize Theme.planetRadius ]
+            [ Svg.text (String.fromInt model.earthNeed.timeout) ]
         ]
 
 
