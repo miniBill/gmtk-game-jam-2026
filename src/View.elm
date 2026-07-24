@@ -98,6 +98,16 @@ viewPlaying model =
                 (viewLinks model)
             ]
         ]
+    , Html.div
+        [ style "display" "flex"
+        , style "gap" "16px"
+        , style "flex-direction" "column"
+        , style "max-width" "90vw"
+        , style "position" "absolute"
+        , style "position-anchor" playingFieldAnchor
+        , style "position-area" "top"
+        ]
+        [ Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ] ]
     , case model.selected of
         SelectedNone ->
             Html.text ""
@@ -150,7 +160,16 @@ viewPlaying model =
                     [ style "background" "white"
                     , style "padding" "8px"
                     ]
-                    [ Html.text "branch 'SelectedEarth' not implemented" ]
+                    [ Html.text "Earth "
+                    , Html.span
+                        [ style "font-weight" "bold" ]
+                        [ Html.text "needs" ]
+                    , productAndTurns
+                        { product = model.earthNeed.product
+                        , turns = model.earthNeed.timeout
+                        , quantity = model.earthNeed.quantity
+                        }
+                    ]
                 ]
     ]
 
@@ -180,50 +199,74 @@ viewVirginPlanetOption planetId option =
                     { icon = Phosphor.tractor
                     , title = "Farm"
                     }
-                , Html.div
-                    [ style "display" "grid"
-                    , style "gap" "2px"
-                    , style "align-items" "center"
-                    , style "grid-template-columns" "auto auto"
-                    , style "text-align" "center"
-                    ]
-                    [ Html.div [] [ Html.text (String.fromInt perTurn) ]
+                , productAndTurns
+                    { quantity = perTurn
+                    , product = product
+                    , turns = turnsLeft
+                    }
+                ]
+
+            FactoryPlanet { efficiency } ->
+                [ icon [ style "height" "30px" ]
+                    { title = "Factory"
+                    , icon = Phosphor.factory
+                    }
+                , twoColumnGrid
+                    [ Html.div [] [ Html.text (String.fromInt efficiency) ]
                     , icon []
-                        { icon = Data.productToIcon product
-                        , title = Data.productToString product
-                        }
-                    , Html.div [] [ Html.text (String.fromInt turnsLeft) ]
-                    , icon []
-                        { title = "Turns"
-                        , icon = Phosphor.hourglass
+                        { icon = Phosphor.clock
+                        , title = "Production per turn"
                         }
                     ]
                 ]
 
-            FactoryPlanet _ ->
-                [ Phosphor.factory Phosphor.Duotone
-                    |> Phosphor.withSize 100
-                    |> Phosphor.withSizeUnit "%"
-                    |> Phosphor.toHtml []
-                    |> List.singleton
-                    |> Html.div
-                        [ style "width" "50%"
-                        , Html.Attributes.title "Factory"
-                        ]
-                ]
-
-            DepositPlanet _ ->
-                [ Phosphor.warehouse Phosphor.Duotone
-                    |> Phosphor.withSize 100
-                    |> Phosphor.withSizeUnit "%"
-                    |> Phosphor.toHtml []
-                    |> List.singleton
-                    |> Html.div
-                        [ style "width" "50%"
-                        , Html.Attributes.title "Deposit"
-                        ]
+            DepositPlanet { capacity } ->
+                [ icon [ style "height" "30px" ]
+                    { title = "Deposit"
+                    , icon = Phosphor.warehouse
+                    }
+                , twoColumnGrid
+                    [ Html.div [] [ Html.text (String.fromInt capacity) ]
+                    , icon []
+                        { icon = Phosphor.package
+                        , title = "Capacity"
+                        }
+                    ]
                 ]
         )
+
+
+productAndTurns :
+    { quantity : Int
+    , product : Data.Product
+    , turns : Int
+    }
+    -> Html msg
+productAndTurns { quantity, product, turns } =
+    twoColumnGrid
+        [ Html.div [] [ Html.text (String.fromInt quantity) ]
+        , icon []
+            { icon = Data.productToIcon product
+            , title = Data.productToString product
+            }
+        , Html.div [] [ Html.text (String.fromInt turns) ]
+        , icon []
+            { title = "Turns"
+            , icon = Phosphor.hourglass
+            }
+        ]
+
+
+twoColumnGrid : List (Html msg) -> Html msg
+twoColumnGrid children =
+    Html.div
+        [ style "display" "grid"
+        , style "gap" "2px"
+        , style "align-items" "center"
+        , style "grid-template-columns" "auto auto"
+        , style "text-align" "center"
+        ]
+        children
 
 
 icon :
@@ -301,12 +344,37 @@ viewEarth model =
             ]
             []
         , Phosphor.hourglass Phosphor.Duotone
-            |> Phosphor.withSize Theme.planetRadius
+            |> Phosphor.withSize (1.75 * Theme.planetRadius)
             |> Phosphor.withSizeUnit ""
-            |> Phosphor.toHtml [ SvgAttributes.y Theme.planetRadius ]
+            |> Phosphor.toHtml
+                [ SvgAttributes.y (1.45 * Theme.planetRadius)
+                , Svg.Attributes.fill "white"
+                ]
         , Svg.text_
-            [ SvgAttributes.fontSize Theme.planetRadius ]
+            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+            , SvgAttributes.y (Theme.planetRadius * 1.5)
+            , Svg.Attributes.dominantBaseline "hanging"
+            , Svg.Attributes.textAnchor "end"
+            , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
+            , Svg.Attributes.fill "white"
+            ]
             [ Svg.text (String.fromInt model.earthNeed.timeout) ]
+        , Data.productToIcon model.earthNeed.product Phosphor.Duotone
+            |> Phosphor.withSize (1.75 * Theme.planetRadius)
+            |> Phosphor.withSizeUnit ""
+            |> Phosphor.toHtml
+                [ SvgAttributes.y (3.45 * Theme.planetRadius)
+                , Svg.Attributes.fill "white"
+                ]
+        , Svg.text_
+            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+            , SvgAttributes.y (Theme.planetRadius * 3.5)
+            , Svg.Attributes.dominantBaseline "hanging"
+            , Svg.Attributes.textAnchor "end"
+            , SvgAttributes.fontSize (1.25 * Theme.planetRadius)
+            , Svg.Attributes.fill "white"
+            ]
+            [ Svg.text (String.fromInt model.earthNeed.quantity) ]
         ]
 
 
