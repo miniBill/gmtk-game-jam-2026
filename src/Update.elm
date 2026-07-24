@@ -14,6 +14,11 @@ import Time
 import Types exposing (Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
+minimumPlanetDistance : Length
+minimumPlanetDistance =
+    Length.lightYears 0.25
+
+
 maximumLinkLength : Length
 maximumLinkLength =
     Length.lightYears 1
@@ -183,11 +188,7 @@ updatePlanets model =
         in
         List.foldl
             (\_ m ->
-                addPlanet
-                    { fromDistance = maximumDistanceSeen
-                    , toDistance = maximumDistanceSeen |> Quantity.plus ringWidth
-                    }
-                    m
+                addPlanet maximumDistanceSeen m
             )
             model
             (List.range 1 toAdd)
@@ -196,8 +197,8 @@ updatePlanets model =
         model
 
 
-addPlanet : { fromDistance : Length, toDistance : Length } -> PlayingModel -> PlayingModel
-addPlanet ({ fromDistance, toDistance } as distances) model =
+addPlanet : Length -> PlayingModel -> PlayingModel
+addPlanet fromDistance model =
     let
         ( planet, nextSeed ) =
             Random.step planetGenerator model.currentSeed
@@ -208,15 +209,38 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
                 nameGenerator
                 positionGenerator
                 kindGenerator
-                |> Random.map PlanetGenerated
+                |> Random.andThen
+                    (\generated ->
+                        if
+                            IdDict.any
+                                (\_ existing ->
+                                    Point2d.distanceFrom
+                                        existing.position
+                                        generated.position
+                                        |> Quantity.lessThan minimumPlanetDistance
+                                )
+                                model.planets
+                        then
+                            Random.weighted
+                                ( 75, RetryGeneration )
+                                [ ( 25, GiveUpGeneration ) ]
+
+                        else
+                            Random.constant (PlanetGenerated generated)
+                    )
 
         positionGenerator : Random.Generator (Point2d Meters ())
         positionGenerator =
+            let
+                from : Length
+                from =
+                    Quantity.max ringWidth fromDistance
+            in
             Random.map2 Point2d.rTheta
                 (Random.map Length.lightYears
                     (Random.float
-                        (Length.inLightYears (Quantity.max ringWidth fromDistance))
-                        (Length.inLightYears toDistance)
+                        (Length.inLightYears from)
+                        (Length.inLightYears (from |> Quantity.plus ringWidth))
                     )
                 )
                 (Random.map Angle.radians (Random.float 0 (2 * pi)))
@@ -224,51 +248,6 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
         kindGenerator : Random.Generator PlanetKind
         kindGenerator =
             Random.map VirginPlanet (Random.list 5 occupiedPlanetGenerator)
-
-        occupiedPlanetGenerator : Random.Generator OccupiedPlanet
-        occupiedPlanetGenerator =
-            Random.weighted ( 1, FarmKind ) [ ( 1, FactoryKind ), ( 1, DepositKind ) ]
-                |> Random.andThen
-                    (\k ->
-                        case k of
-                            FarmKind ->
-                                Random.map3
-                                    (\product maxTurns perTurn ->
-                                        FarmPlanet
-                                            { product = product
-                                            , turnsLeft = maxTurns
-                                            , perTurn = perTurn
-                                            }
-                                    )
-                                    randomProduct
-                                    (Random.int 2 10)
-                                    (Random.int 1 3)
-
-                            FactoryKind ->
-                                Random.map
-                                    (\efficiency ->
-                                        FactoryPlanet
-                                            { efficiency = efficiency
-                                            , deposit = []
-                                            , order = Nothing
-                                            }
-                                    )
-                                    (Random.weighted ( 3, 2 )
-                                        [ ( 1, 1 )
-                                        , ( 0.5, 3 )
-                                        ]
-                                    )
-
-                            DepositKind ->
-                                Random.map
-                                    (\capacity ->
-                                        DepositPlanet
-                                            { capacity = capacity
-                                            , content = []
-                                            }
-                                    )
-                                    (Random.int 5 10)
-                    )
     in
     case planet of
         GiveUpGeneration ->
@@ -281,7 +260,53 @@ addPlanet ({ fromDistance, toDistance } as distances) model =
             }
 
         RetryGeneration ->
-            addPlanet distances { model | currentSeed = nextSeed }
+            addPlanet fromDistance { model | currentSeed = nextSeed }
+
+
+occupiedPlanetGenerator : Random.Generator OccupiedPlanet
+occupiedPlanetGenerator =
+    Random.weighted ( 1, FarmKind ) [ ( 1, FactoryKind ), ( 1, DepositKind ) ]
+        |> Random.andThen
+            (\k ->
+                case k of
+                    FarmKind ->
+                        Random.map3
+                            (\product maxTurns perTurn ->
+                                FarmPlanet
+                                    { product = product
+                                    , turnsLeft = maxTurns
+                                    , perTurn = perTurn
+                                    }
+                            )
+                            randomProduct
+                            (Random.int 2 10)
+                            (Random.int 1 3)
+
+                    FactoryKind ->
+                        Random.map
+                            (\efficiency ->
+                                FactoryPlanet
+                                    { efficiency = efficiency
+                                    , deposit = []
+                                    , order = Nothing
+                                    }
+                            )
+                            (Random.weighted ( 3, 2 )
+                                [ ( 1, 1 )
+                                , ( 0.5, 3 )
+                                ]
+                            )
+
+                    DepositKind ->
+                        Random.map
+                            (\capacity ->
+                                DepositPlanet
+                                    { capacity = capacity
+                                    , content = []
+                                    }
+                            )
+                            (Random.int 5 10)
+            )
 
 
 type PlanetKindWithoutData
@@ -309,7 +334,7 @@ nameGenerator =
         pairGenerator : Random.Generator String
         pairGenerator =
             Random.uniform ""
-                [ "LE", "XE", "GE", "ZA", "CE", "BI", "SO", "US", "ES", "AR", "MA", "IN", "DI", "RE", "A", "ER", "AT", "EN", "BE", "RA", "LA", "VE", "TI", "ED", "OR", "QU", "AN", "TE", "IS", "RI", "ON" ]
+                [ "le", "xe", "ge", "za", "ce", "bi", "so", "us", "es", "ar", "ma", "in", "di", "re", "a", "er", "at", "en", "be", "ra", "la", "ve", "ti", "ed", "or", "qu", "an", "te", "is", "ri", "on" ]
     in
     Random.weighted ( 3, 4 ) [ ( 1, 5 ) ]
         |> Random.andThen (\length -> Random.list length pairGenerator)

@@ -12,6 +12,7 @@ import Length exposing (Length, Meters)
 import Phosphor
 import Point2d
 import Quantity
+import String.Extra
 import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
@@ -116,7 +117,11 @@ viewPlaying model =
                                     , style "text-align" "center"
                                     , style "font-weight" "bold"
                                     ]
-                                    [ Html.text "Colonize planet" ]
+                                    [ Html.text
+                                        ("Colonize planet "
+                                            ++ String.Extra.toSentenceCase planet.name
+                                        )
+                                    ]
                                 , selectionRow []
                                     (List.map (viewVirginPlanetOption planetId) options)
                                 ]

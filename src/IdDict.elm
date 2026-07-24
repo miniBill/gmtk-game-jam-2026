@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, empty, fold, get, insert, nextId, updateIfExists, values)
+module IdDict exposing (IdDict, any, empty, fold, get, insert, nextId, updateIfExists, values)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -46,3 +46,17 @@ nextId dict =
 values : IdDict k v -> List v
 values (IdDict dict) =
     Dict.values dict
+
+
+any : (Id k -> v -> Bool) -> IdDict k v -> Bool
+any f (IdDict dict) =
+    Dict.stoppableFoldl
+        (\k v _ ->
+            if f (Id k) v then
+                Dict.Stop True
+
+            else
+                Dict.Continue False
+        )
+        False
+        dict
