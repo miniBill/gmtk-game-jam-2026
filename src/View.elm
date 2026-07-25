@@ -125,10 +125,11 @@ viewPlaying model =
             planetsViews
         ]
     , Html.div
-        [ style "flex" "1"
+        [ style "flex" "1 0 80px"
         , style "display" "flex"
         , style "flex-direction" "column"
         , style "align-self" "stretch"
+        , style "gap" "8px"
         ]
         [ case model.selected of
             SelectedNone ->
@@ -141,10 +142,25 @@ viewPlaying model =
 
                     Just planet ->
                         bottomBox model planetId planet
+        , Html.div [ style "flex" "1 0" ] []
+        , Html.p
+            [ style "color" "white"
+            , style "font-weight" "bold"
+            , style "text-align" "center"
+            ]
+            [ Html.text "Recipes" ]
+        , Product.all
+            |> List.filterMap viewRecipe
+            |> List.sortBy Tuple.first
+            |> List.map Tuple.second
+            |> Html.div
+                [ style "display" "flex"
+                , style "flex-wrap" "wrap"
+                , style "gap" "8px"
+                ]
         , Html.div
             [ style "display" "flex"
-            , style "gap" "16px"
-            , style "flex-direction" "row"
+            , style "gap" "8px"
             , style "max-width" "90vw"
             ]
             [ Html.div
@@ -556,39 +572,63 @@ viewSelectedPlanet planetId planet =
 
 viewFactoryOption : FactoryData -> Product -> Maybe (Html (Maybe Product))
 viewFactoryOption factory product =
+    case Product.toRecipe product of
+        Nothing ->
+            Nothing
+
+        Just _ ->
+            let
+                selected =
+                    factory.order == Just product
+            in
+            htmlTwoColumnGrid
+                [ style "flex-direction" "column"
+                , if selected then
+                    style "background" "#f44"
+
+                  else
+                    style "background" "gray"
+                , style "padding" "8px"
+                , style "align-items" "center"
+                , Html.Attributes.class "on-hover-highlight"
+                , if selected then
+                    Html.Events.onClick Nothing
+
+                  else
+                    Html.Events.onClick (Just product)
+                , style "cursor" "pointer"
+                ]
+                [ Product factory.efficiency product
+                ]
+                |> Just
+
+
+viewRecipe : Product -> Maybe ( Int, Html msg )
+viewRecipe product =
     Product.toRecipe product
         |> Maybe.map
             (\recipe ->
-                let
-                    selected : Bool
-                    selected =
-                        factory.order == Just product
-                in
-                Html.div
-                    [ if selected then
-                        style "background" "#f44"
-
-                      else
-                        style "background" "gray"
+                ( List.length recipe
+                , Html.div
+                    [ style "display" "flex"
+                    , style "flex-direction" "column"
+                    , style "background" "gray"
                     , style "padding" "8px"
+                    , style "align-items" "center"
                     , Html.Attributes.class "on-hover-highlight"
-                    , if selected then
-                        Html.Events.onClick Nothing
-
-                      else
-                        Html.Events.onClick (Just product)
                     , style "cursor" "pointer"
                     ]
                     [ htmlTwoColumnGrid []
-                        [ Product factory.efficiency product
+                        [ Product 1 product
                         ]
                     , Html.text "from"
                     , htmlTwoColumnGrid []
                         (List.map
-                            (\ingredient -> Product (factory.efficiency * ingredient.quantity) ingredient.product)
+                            (\ingredient -> Product ingredient.quantity ingredient.product)
                             recipe
                         )
                     ]
+                )
             )
 
 
