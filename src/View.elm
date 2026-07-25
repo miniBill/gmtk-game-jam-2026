@@ -182,8 +182,20 @@ viewPlaying model =
                                     ]
 
                             OccupiedPlanet (DepositPlanet deposit) ->
-                                [ Html.p [] []
-                                , htmlTwoColumnGrid [] []
+                                [ Html.p
+                                    [ style "display" "block"
+                                    , style "color" "white"
+                                    , style "text-align" "center"
+                                    , style "font-weight" "bold"
+                                    ]
+                                    [ if List.isEmpty deposit.content then
+                                        Html.text ("The planet " ++ planet.name ++ " is empty")
+
+                                      else
+                                        Html.text ("The planet " ++ planet.name ++ " contains")
+                                    ]
+                                , htmlTwoColumnGrid []
+                                    (List.map (\item -> Product item.quantity item.product) deposit.content)
                                 ]
                         )
 
