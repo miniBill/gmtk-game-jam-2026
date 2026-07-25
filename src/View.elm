@@ -277,7 +277,13 @@ viewLinkPossibilities model from fromPlanet =
                             []
 
                 OccupiedPlanet (DepositPlanet { content }) ->
-                    content
+                    Product.Dict.toList content
+                        |> List.map
+                            (\( product, quantity ) ->
+                                { product = product
+                                , quantity = quantity
+                                }
+                            )
 
         columns : String
         columns =
@@ -463,14 +469,16 @@ viewSelectedPlanet planetId planet =
                 , style "text-align" "center"
                 , style "font-weight" "bold"
                 ]
-                [ if List.isEmpty deposit.content then
+                [ if Product.Dict.isEmpty deposit.content then
                     Html.text ("The planet " ++ planet.name ++ " is empty")
 
                   else
                     Html.text ("The planet " ++ planet.name ++ " contains")
                 ]
-            , htmlTwoColumnGrid []
-                (List.map (\item -> Product item.quantity item.product) deposit.content)
+            , deposit.content
+                |> Product.Dict.toList
+                |> List.map (\( product, quantity ) -> Product quantity product)
+                |> htmlTwoColumnGrid []
             ]
 
 
@@ -886,8 +894,8 @@ viewPlanet { selected, highlighted } id planet =
                     svgTwoColumnGrid { x = cx, y = cy }
                         (Capacity deposit.capacity
                             :: List.map
-                                (\{ product, quantity } -> Product quantity product)
-                                deposit.content
+                                (\( product, quantity ) -> Product quantity product)
+                                (Product.Dict.toList deposit.content)
                         )
     in
     ( Svg.g
@@ -947,7 +955,7 @@ viewLinks model =
 
 viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> Maybe (Svg PlayingMsg)
 viewLink model from fromPlanet to link =
-    if Product.Dict.all (\v -> v <= 0) link then
+    if Product.Dict.all (\_ v -> v <= 0) link then
         Nothing
 
     else

@@ -15,6 +15,7 @@ import String.Extra
 import Task
 import Theme
 import Time
+import Turn
 import Types exposing (FarmData, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
@@ -160,7 +161,11 @@ updatePlaying msg model =
             )
 
         EndTurn ->
-            ( model |> updatePlanets, Cmd.none )
+            ( model
+                |> updatePlanets
+                |> Turn.run
+            , Cmd.none
+            )
 
         SetFactoryProduction id order ->
             ( { model
@@ -340,7 +345,7 @@ depositGenerator =
         (\capacity ->
             DepositPlanet
                 { capacity = capacity
-                , content = []
+                , content = Product.Dict.empty
                 }
         )
         (Random.int 5 10)
@@ -352,7 +357,7 @@ factoryGenerator =
         (\efficiency ->
             FactoryPlanet
                 { efficiency = efficiency
-                , deposit = []
+                , deposit = Product.Dict.empty
                 , order = Nothing
                 }
         )

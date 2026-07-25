@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, any, empty, fold, get, insert, nextId, update, updateIfExists, values)
+module IdDict exposing (IdDict, any, empty, filterMap, fold, get, insert, nextId, update, updateIfExists, values)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -65,3 +65,19 @@ any f (IdDict dict) =
         )
         False
         dict
+
+
+filterMap : (Id k -> v -> Maybe w) -> IdDict k v -> IdDict k w
+filterMap f (IdDict dict) =
+    Dict.foldl
+        (\k v acc ->
+            case f (Id k) v of
+                Just e ->
+                    Dict.insert k e acc
+
+                Nothing ->
+                    acc
+        )
+        Dict.empty
+        dict
+        |> IdDict

@@ -77,13 +77,13 @@ type alias FarmData =
 type alias FactoryData =
     { efficiency : Int
     , order : Maybe Product
-    , deposit : List { product : Product, quantity : Int }
+    , deposit : ProductDict Int
     }
 
 
 type alias DepositData =
     { capacity : Int
-    , content : List { product : Product, quantity : Int }
+    , content : ProductDict Int
     }
 
 
