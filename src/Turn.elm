@@ -299,15 +299,10 @@ updateCountdowns model =
                 PlanetUnchanged ->
                     acc
 
-                PlanetNotLost newPlanetGenerator ->
-                    let
-                        ( newPlanet, newSeed ) =
-                            Random.step newPlanetGenerator modelAcc.currentSeed
-                    in
+                PlanetNotLost newPlanet ->
                     ( { modelAcc
                         | planets =
                             IdDict.insert planetId newPlanet modelAcc.planets
-                        , currentSeed = newSeed
                       }
                     , lost
                     )
@@ -318,13 +313,28 @@ updateCountdowns model =
                       }
                     , True
                     )
+
+                PlanetScored points newPlanetGenerator ->
+                    let
+                        ( newPlanet, newSeed ) =
+                            Random.step newPlanetGenerator modelAcc.currentSeed
+                    in
+                    ( { modelAcc
+                        | planets =
+                            IdDict.insert planetId newPlanet modelAcc.planets
+                        , currentSeed = newSeed
+                        , score = modelAcc.score + points
+                      }
+                    , lost
+                    )
         )
         ( model, False )
         model.planets
 
 
 type CountdownUpdateResult
-    = PlanetNotLost (Random.Generator Planet)
+    = PlanetNotLost Planet
+    | PlanetScored Int (Random.Generator Planet)
     | PlanetLost Planet
     | PlanetUnchanged
 
@@ -357,7 +367,7 @@ updateCountdown maxRequired planet =
                         h :: t ->
                             Random.uniform h t
                     )
-                    |> PlanetNotLost
+                    |> PlanetScored colony.countdown
 
             else if colony.countdown <= 1 then
                 PlanetLost { planet | kind = ColonyPlanet { colony | countdown = 0 } }
@@ -367,7 +377,6 @@ updateCountdown maxRequired planet =
                     | kind =
                         ColonyPlanet { colony | countdown = colony.countdown - 1 }
                 }
-                    |> Random.constant
                     |> PlanetNotLost
 
         OccupiedPlanet (FarmPlanet farm) ->
@@ -376,7 +385,6 @@ updateCountdown maxRequired planet =
                     OccupiedPlanet
                         (FarmPlanet { farm | countdown = max 0 (farm.countdown - 1) })
             }
-                |> Random.constant
                 |> PlanetNotLost
 
         OccupiedPlanet (FactoryPlanet _) ->
