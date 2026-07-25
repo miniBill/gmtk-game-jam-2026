@@ -51,7 +51,10 @@ view _ model =
                     |> List.map (Html.map PlayingMsg)
 
             Lost lostModel ->
-                [ Html.text ("Final score: " ++ String.fromInt lostModel.score)
+                [ Html.p
+                    [ style "color" "white"
+                    ]
+                    [ Html.text ("Final score: " ++ String.fromInt lostModel.score) ]
                 , Html.button
                     [ Html.Events.onClick Play
                     ]
