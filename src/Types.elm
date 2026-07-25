@@ -1,9 +1,9 @@
-module Types exposing (ColonyData, DepositData, FactoryData, FarmData, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
-import Length exposing (Length, Meters)
+import Length exposing (Meters)
 import Point2d exposing (Point2d)
 import Product exposing (Product)
 import Product.Dict exposing (ProductDict)
@@ -30,6 +30,7 @@ type alias PlayingModel =
     , selected : Selected
     , highlighted : Highlighted
     , score : Int
+    , gameMode : GameMode
     }
 
 
@@ -39,7 +40,12 @@ type alias LostModel =
     , selected : Selected
     , highlighted : Highlighted
     , score : Int
+    , gameMode : GameMode
     }
+
+
+type alias GameMode =
+    { hard : Bool }
 
 
 type Selected
@@ -91,7 +97,7 @@ type alias FactoryData =
 
 
 type alias DepositData =
-    { capacity : Int
+    { capacity : Maybe Int
     , content : ProductDict Int
     }
 
@@ -111,9 +117,9 @@ type alias Recipe =
 
 
 type Msg
-    = Play
+    = Play GameMode
     | TimeResult Audio.Source Time.Posix
-    | InitialSeed Int
+    | InitialSeed GameMode Int
     | PlaySound
     | AudioLoadResult (Result Audio.LoadError Audio.Source)
     | PlayingMsg PlayingMsg

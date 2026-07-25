@@ -36,9 +36,13 @@ view _ model =
         (case model.page of
             Menu ->
                 [ Html.button
-                    [ Html.Events.onClick Play
+                    [ Html.Events.onClick (Play { hard = False })
                     ]
                     [ Html.text "Play game" ]
+                , Html.button
+                    [ Html.Events.onClick (Play { hard = True })
+                    ]
+                    [ Html.text "Play game (hard mode - deposit size limit)" ]
 
                 -- , Html.button
                 --     [ Html.Events.onClick PlaySound
@@ -56,9 +60,13 @@ view _ model =
                     ]
                     [ Html.text ("Final score: " ++ String.fromInt lostModel.score) ]
                 , Html.button
-                    [ Html.Events.onClick Play
+                    [ Html.Events.onClick (Play { hard = False })
                     ]
                     [ Html.text "Play game" ]
+                , Html.button
+                    [ Html.Events.onClick (Play { hard = True })
+                    ]
+                    [ Html.text "Play game (hard mode - deposit size limit)" ]
 
                 -- , Html.button
                 --     [ Html.Events.onClick PlaySound
@@ -644,29 +652,31 @@ type GridRow
     = Product Int Product
     | Countdown Int
     | Efficiency Int
-    | Capacity Int
+    | Capacity (Maybe Int)
 
 
 gridRowToHtml : GridRow -> List (Html msg)
 gridRowToHtml gridRow =
-    let
-        ( text, rowIcon ) =
-            gridRowToTuple gridRow
-    in
-    [ Html.div [] [ Html.text text ]
-    , icon [] rowIcon
-    ]
+    case gridRowToTuple gridRow of
+        Just ( text, rowIcon ) ->
+            [ Html.div [] [ Html.text text ]
+            , icon [] rowIcon
+            ]
+
+        Nothing ->
+            []
 
 
 gridRowToTuple :
     GridRow
     ->
-        ( String
-        , { icon : Phosphor.IconWeight -> Phosphor.IconVariant
-          , title : String
-          , color : Maybe String
-          }
-        )
+        Maybe
+            ( String
+            , { icon : Phosphor.IconWeight -> Phosphor.IconVariant
+              , title : String
+              , color : Maybe String
+              }
+            )
 gridRowToTuple gridRow =
     case gridRow of
         Product quantity product ->
@@ -676,6 +686,7 @@ gridRowToTuple gridRow =
               , color = Just (Product.toColor product)
               }
             )
+                |> Just
 
         Countdown turns ->
             ( String.fromInt turns
@@ -684,6 +695,7 @@ gridRowToTuple gridRow =
               , color = Nothing
               }
             )
+                |> Just
 
         Efficiency efficiency ->
             ( String.fromInt efficiency
@@ -692,14 +704,19 @@ gridRowToTuple gridRow =
               , color = Just "gray"
               }
             )
+                |> Just
 
-        Capacity capacity ->
+        Capacity Nothing ->
+            Nothing
+
+        Capacity (Just capacity) ->
             ( String.fromInt capacity
             , { icon = Phosphor.package
               , title = "Capacity"
               , color = Just "brown"
               }
             )
+                |> Just
 
 
 icon :
@@ -777,29 +794,30 @@ svgTwoColumnGrid config rows =
 
 gridRowToSvg : Int -> GridRow -> Svg msg
 gridRowToSvg i row =
-    let
-        ( text, rowIcon ) =
-            gridRowToTuple row
-    in
-    Svg.g
-        [ SvgAttributes.transformTranslate
-            { x = 0
-            , y = (toFloat i + 1.1) * Theme.planetRadius * 1.3
-            }
-        ]
-        [ rowIcon.icon Phosphor.Duotone
-            |> Phosphor.withSize (1.1 * Theme.planetRadius)
-            |> Phosphor.withSizeUnit ""
-            |> Phosphor.toHtml [ Svg.Attributes.fill (Maybe.withDefault "white" rowIcon.color) ]
-        , Svg.text_
-            [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-            , Svg.Attributes.dominantBaseline "hanging"
-            , Svg.Attributes.textAnchor "end"
-            , SvgAttributes.fontSize (1.1 * Theme.planetRadius)
-            , Svg.Attributes.fill "white"
-            ]
-            [ Svg.text text ]
-        ]
+    case gridRowToTuple row of
+        Just ( text, rowIcon ) ->
+            Svg.g
+                [ SvgAttributes.transformTranslate
+                    { x = 0
+                    , y = (toFloat i + 1.1) * Theme.planetRadius * 1.3
+                    }
+                ]
+                [ rowIcon.icon Phosphor.Duotone
+                    |> Phosphor.withSize (1.1 * Theme.planetRadius)
+                    |> Phosphor.withSizeUnit ""
+                    |> Phosphor.toHtml [ Svg.Attributes.fill (Maybe.withDefault "white" rowIcon.color) ]
+                , Svg.text_
+                    [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+                    , Svg.Attributes.dominantBaseline "hanging"
+                    , Svg.Attributes.textAnchor "end"
+                    , SvgAttributes.fontSize (1.1 * Theme.planetRadius)
+                    , Svg.Attributes.fill "white"
+                    ]
+                    [ Svg.text text ]
+                ]
+
+        Nothing ->
+            Svg.text ""
 
 
 viewPlanets : PlayingModel -> ( List (Svg PlayingMsg), List (Svg msg) )

@@ -23,6 +23,7 @@ run model =
         , selected = newModel.selected
         , highlighted = newModel.highlighted
         , score = newModel.score
+        , gameMode = newModel.gameMode
         }
             |> Err
 
@@ -33,6 +34,7 @@ run model =
         , selected = newModel.selected
         , highlighted = newModel.highlighted
         , score = newModel.score
+        , gameMode = newModel.gameMode
         }
             |> Ok
 
@@ -244,12 +246,17 @@ applyImport ( model, exports ) =
 
 fillDepositWith : ProductDict Int -> Types.DepositData -> ProductDict Int
 fillDepositWith imports { capacity, content } =
-    let
-        availableCapacity : Int
-        availableCapacity =
-            capacity - Product.Dict.sum content
-    in
-    fillDepositStep availableCapacity (Product.Dict.toList imports) [] content
+    case capacity of
+        Nothing ->
+            Product.Dict.mergeSum content imports
+
+        Just total ->
+            let
+                availableCapacity : Int
+                availableCapacity =
+                    total - Product.Dict.sum content
+            in
+            fillDepositStep availableCapacity (Product.Dict.toList imports) [] content
 
 
 fillDepositStep : Int -> List ( Product.Product, Int ) -> List ( Product.Product, Int ) -> ProductDict Int -> ProductDict Int

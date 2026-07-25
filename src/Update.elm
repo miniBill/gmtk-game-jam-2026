@@ -16,7 +16,7 @@ import Task
 import Theme
 import Time
 import Turn
-import Types exposing (FarmData, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FarmData, GameMode, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 minimumPlanetDistance : Length
@@ -56,16 +56,16 @@ update audioData msg model =
                     , Audio.cmdNone
                     )
 
-        Play ->
+        Play gameMode ->
             ( model
-            , Random.int 0 Random.maxInt |> Random.generate InitialSeed
+            , Random.int 0 Random.maxInt |> Random.generate (InitialSeed gameMode)
             , Audio.cmdNone
             )
 
-        InitialSeed initialSeed ->
+        InitialSeed gameMode initialSeed ->
             ( { model
                 | page =
-                    initPlayingModel initialSeed
+                    initPlayingModel gameMode initialSeed
                         |> updatePlanets
                         |> Playing
               }
@@ -105,14 +105,15 @@ update audioData msg model =
                     ( model, Cmd.none, Audio.cmdNone )
 
 
-initPlayingModel : Int -> PlayingModel
-initPlayingModel initialSeed =
+initPlayingModel : GameMode -> Int -> PlayingModel
+initPlayingModel gameMode initialSeed =
     { initialSeed = initialSeed
     , currentSeed = Random.initialSeed initialSeed
     , planets = IdDict.empty |> IdDict.insertNew initialEarth
     , selected = SelectedNone
     , highlighted = HighlightedNone
     , score = 0
+    , gameMode = gameMode
     }
 
 
@@ -265,7 +266,7 @@ updatePlanets model =
         in
         List.foldl
             (\_ m ->
-                addPlanet 100 maximumDistanceSeen m
+                addPlanet model.gameMode 100 maximumDistanceSeen m
             )
             model
             (List.range 1 toAdd)
@@ -274,8 +275,8 @@ updatePlanets model =
         model
 
 
-addPlanet : Float -> Length -> PlayingModel -> PlayingModel
-addPlanet budget fromDistance model =
+addPlanet : GameMode -> Float -> Length -> PlayingModel -> PlayingModel
+addPlanet mode budget fromDistance model =
     let
         ( planet, nextSeed ) =
             Random.step planetGenerator model.currentSeed
@@ -331,7 +332,7 @@ addPlanet budget fromDistance model =
                 )
                 (farmGenerator 3 [])
                 factoryGenerator
-                depositGenerator
+                (depositGenerator mode)
     in
     case planet of
         GiveUpGeneration ->
@@ -344,19 +345,28 @@ addPlanet budget fromDistance model =
             }
 
         RetryGeneration ->
-            addPlanet (budget - 5) fromDistance { model | currentSeed = nextSeed }
+            addPlanet mode (budget - 5) fromDistance { model | currentSeed = nextSeed }
 
 
-depositGenerator : Random.Generator OccupiedPlanet
-depositGenerator =
-    Random.map
-        (\capacity ->
-            DepositPlanet
-                { capacity = capacity
+depositGenerator : GameMode -> Random.Generator OccupiedPlanet
+depositGenerator { hard } =
+    if hard then
+        Random.map
+            (\capacity ->
+                DepositPlanet
+                    { capacity = Just capacity
+                    , content = Product.Dict.empty
+                    }
+            )
+            (Random.int 10 25)
+
+    else
+        Random.constant
+            (DepositPlanet
+                { capacity = Nothing
                 , content = Product.Dict.empty
                 }
-        )
-        (Random.int 10 25)
+            )
 
 
 factoryGenerator : Random.Generator OccupiedPlanet
