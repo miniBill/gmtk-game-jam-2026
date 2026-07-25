@@ -6,6 +6,7 @@ import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import Point2d exposing (Point2d)
 import Product exposing (Product)
+import Product.Dict exposing (ProductDict)
 import Random
 import Time
 
@@ -52,7 +53,7 @@ type alias Planet =
 
 
 type alias Link =
-    List { product : Product, quantity : Int }
+    ProductDict Int
 
 
 type PlanetKind
@@ -118,3 +119,4 @@ type PlayingMsg
     | HighlightLink (Id PlanetId) (Id PlanetId)
     | HighlightPlanet (Id PlanetId)
     | HighlightNone
+    | SetLink (Id PlanetId) (Id PlanetId) Product Int

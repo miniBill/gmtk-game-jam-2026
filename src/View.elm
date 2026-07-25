@@ -11,6 +11,7 @@ import Length exposing (Length, Meters)
 import Phosphor
 import Point2d
 import Product exposing (Product)
+import Product.Dict
 import Quantity
 import Svg exposing (Svg)
 import Svg.Attributes
@@ -185,14 +186,22 @@ maximumLinkLength =
 viewLinkPossibilities : PlayingModel -> Id PlanetId -> Planet -> List (Html PlayingMsg)
 viewLinkPossibilities model from fromPlanet =
     let
+        addLinks :
+            Id PlanetId
+            -> { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
+            -> List (Html PlayingMsg)
+            -> List (Html PlayingMsg)
         addLinks to toPlanet acc =
             viewLinkPossibility model
                 { from = from
                 , fromPlanet = fromPlanet
                 , to = to
                 , toPlanet = toPlanet
+                , available = products
+                , link =
+                    IdDict.get to fromPlanet.links
+                        |> Maybe.withDefault Product.Dict.empty
                 }
-                (IdDict.get to fromPlanet.links |> Maybe.withDefault [])
                 ++ acc
 
         children : List (Html PlayingMsg)
@@ -222,8 +231,31 @@ viewLinkPossibilities model from fromPlanet =
                 []
                 model.planets
 
+        products : List { product : Product, quantity : Int }
         products =
-            []
+            case fromPlanet.kind of
+                VirginPlanet _ ->
+                    []
+
+                ColonyPlanet _ ->
+                    []
+
+                OccupiedPlanet (FarmPlanet { product, perTurn }) ->
+                    [ { product = product, quantity = perTurn } ]
+
+                OccupiedPlanet (FactoryPlanet { order, efficiency }) ->
+                    case order of
+                        Just product ->
+                            [ { product = product
+                              , quantity = efficiency
+                              }
+                            ]
+
+                        Nothing ->
+                            []
+
+                OccupiedPlanet (DepositPlanet { content }) ->
+                    content
 
         columns : String
         columns =
@@ -249,23 +281,55 @@ viewLinkPossibility :
         , fromPlanet : Planet
         , to : Id PlanetId
         , toPlanet : { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
+        , available : List { product : Product, quantity : Int }
+        , link : Link
         }
-    -> List { product : Product, quantity : Int }
     -> List (Html PlayingMsg)
-viewLinkPossibility model endpoints link =
-    [ Html.div
-        [ style "display" "flex"
-        , style "gap" "8px"
-        ]
-        [ Html.text "To"
-        , Html.img
-            [ Html.Attributes.src (planetImage endpoints.toPlanet)
-            , style "width" "4vw"
-            ]
-            []
-        , Html.text endpoints.toPlanet.name
-        ]
-    ]
+viewLinkPossibility _ config =
+    let
+        nameView : Html PlayingMsg
+        nameView =
+            Html.div
+                [ style "display" "flex"
+                , style "gap" "8px"
+                , Html.Events.onMouseEnter (HighlightPlanet config.to)
+                , Html.Events.onMouseLeave HighlightNone
+                ]
+                [ Html.text "To"
+                , Html.img
+                    [ Html.Attributes.src (planetImage config.toPlanet)
+                    , style "width" "4vw"
+                    ]
+                    []
+                , Html.text config.toPlanet.name
+                ]
+
+        viewProductInput : { product : Product, quantity : Int } -> Html PlayingMsg
+        viewProductInput { product, quantity } =
+            let
+                value : Int
+                value =
+                    Product.Dict.get product config.link
+                        |> Maybe.withDefault 0
+            in
+            Html.input
+                [ Html.Attributes.type_ "number"
+                , Html.Attributes.min "0"
+                , value
+                    |> String.fromInt
+                    |> Html.Attributes.value
+                , Html.Attributes.max (String.fromInt quantity)
+                , Html.Events.onInput
+                    (\v ->
+                        v
+                            |> String.toInt
+                            |> Maybe.withDefault value
+                            |> SetLink config.from config.to product
+                    )
+                ]
+                []
+    in
+    nameView :: List.map viewProductInput config.available
 
 
 viewSelectedPlanet : Id PlanetId -> Planet -> List (Html PlayingMsg)

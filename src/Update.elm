@@ -8,6 +8,7 @@ import Length exposing (Length, Meters)
 import List.Extra
 import Point2d exposing (Point2d)
 import Product exposing (Product(..))
+import Product.Dict
 import Quantity
 import Random
 import String.Extra
@@ -179,6 +180,29 @@ updatePlaying msg model =
 
                                 _ ->
                                     planet
+                        )
+                        model.planets
+              }
+            , Cmd.none
+            )
+
+        SetLink from to product quantity ->
+            ( { model
+                | planets =
+                    IdDict.updateIfExists
+                        from
+                        (\planet ->
+                            { planet
+                                | links =
+                                    IdDict.update to
+                                        (\links ->
+                                            links
+                                                |> Maybe.withDefault Product.Dict.empty
+                                                |> Product.Dict.insert product quantity
+                                                |> Just
+                                        )
+                                        planet.links
+                            }
                         )
                         model.planets
               }

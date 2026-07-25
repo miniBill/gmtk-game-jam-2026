@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, any, empty, fold, get, insert, nextId, updateIfExists, values)
+module IdDict exposing (IdDict, any, empty, fold, get, insert, nextId, update, updateIfExists, values)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -26,6 +26,11 @@ get (Id id) (IdDict dict) =
 updateIfExists : Id k -> (v -> v) -> IdDict k v -> IdDict k v
 updateIfExists (Id id) f (IdDict dict) =
     IdDict (Dict.update id (Maybe.map f) dict)
+
+
+update : Id k -> (Maybe v -> Maybe v) -> IdDict k v -> IdDict k v
+update (Id id) f (IdDict dict) =
+    IdDict (Dict.update id f dict)
 
 
 fold : (Id k -> v -> r -> r) -> r -> IdDict k v -> r
