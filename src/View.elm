@@ -83,17 +83,25 @@ viewPlaying model =
         , style "max-height" "calc(100dvh - 200px)"
         , style "anchor-name" playingFieldAnchor
         ]
-        [ Svg.svg
+        [ let
+            ( planetsViews, background ) =
+                viewPlanets model
+          in
+          Svg.svg
             [ style "width" "100%"
             , style "height" "auto"
             , style "max-height" "100%"
             , Svg.Attributes.viewBox viewBox
             ]
-            [ Svg.g [ Svg.Attributes.id "links" ]
+            [ Svg.defs []
+                [ selectionGradient.def
+                ]
+            , Svg.g [ Svg.Attributes.id "background" ] background
+            , Svg.g [ Svg.Attributes.id "links" ]
                 (viewLinks model)
             , Svg.g
                 [ Svg.Attributes.id "planets" ]
-                (viewPlanets model)
+                planetsViews
             ]
         ]
     , Html.div
@@ -141,6 +149,32 @@ viewPlaying model =
                                )
                         )
     ]
+
+
+selectionGradient : { ref : String, def : Svg msg }
+selectionGradient =
+    let
+        id : String
+        id =
+            "selection-gradient"
+    in
+    { ref = "url(#" ++ id ++ ")"
+    , def =
+        Svg.radialGradient
+            [ Svg.Attributes.id id
+            ]
+            [ Svg.stop
+                [ Svg.Attributes.offset "0%"
+                , Svg.Attributes.stopColor "#4f45"
+                ]
+                []
+            , Svg.stop
+                [ Svg.Attributes.offset "100%"
+                , Svg.Attributes.stopColor "#4f43"
+                ]
+                []
+            ]
+    }
 
 
 maximumLinkLength : Length
@@ -614,12 +648,25 @@ gridRowToSvg i row =
         ]
 
 
-viewPlanets : PlayingModel -> List (Svg PlayingMsg)
+viewPlanets : PlayingModel -> ( List (Svg PlayingMsg), List (Svg msg) )
 viewPlanets model =
-    IdDict.fold (\k v acc -> viewPlanet model.selected k v :: acc) [] model.planets
+    IdDict.fold
+        (\k v ( acc, bgAcc ) ->
+            let
+                ( e, bg ) =
+                    viewPlanet model.selected k v
+            in
+            ( e :: acc, bg ++ bgAcc )
+        )
+        ( [], [] )
+        model.planets
 
 
-viewPlanet : Selected -> Id PlanetId -> Planet -> Svg PlayingMsg
+viewPlanet :
+    Selected
+    -> Id PlanetId
+    -> Planet
+    -> ( Svg PlayingMsg, List (Svg msg) )
 viewPlanet selected id planet =
     let
         ( cx, cy ) =
@@ -650,10 +697,10 @@ viewPlanet selected id planet =
                 [ Svg.circle
                     [ SvgAttributes.cx (Length.inLightYears cx)
                     , SvgAttributes.cy (Length.inLightYears cy)
-                    , SvgAttributes.r (Theme.planetRadius * 1.3)
-                    , Svg.Attributes.fill "transparent"
-                    , SvgAttributes.strokeWidth 0.024
+                    , SvgAttributes.r (Length.inLightYears maximumLinkLength)
+                    , SvgAttributes.strokeWidth 0.01
                     , Svg.Attributes.stroke "green"
+                    , Svg.Attributes.fill selectionGradient.ref
                     ]
                     []
                 ]
@@ -661,7 +708,7 @@ viewPlanet selected id planet =
             else
                 []
 
-        bottomView : Svg msg
+        bottomView : Svg PlayingMsg
         bottomView =
             case planet.kind of
                 VirginPlanet options ->
@@ -732,14 +779,16 @@ viewPlanet selected id planet =
                                 deposit.content
                         )
     in
-    Svg.g
+    ( Svg.g
         [ Svg.Attributes.id (Id.toString id)
         , Svg.Events.onClick (SelectPlanet id)
         , Svg.Events.onMouseOver (HighlightPlanet id)
         , Svg.Events.onMouseOut HighlightNone
         , Svg.Attributes.cursor "pointer"
         ]
-        (img :: bottomView :: selectionView)
+        [ img, bottomView ]
+    , selectionView
+    )
 
 
 planetImage : Planet -> String
