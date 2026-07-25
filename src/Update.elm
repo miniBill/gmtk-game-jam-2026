@@ -12,6 +12,7 @@ import Quantity
 import Random
 import String.Extra
 import Task
+import Theme
 import Time
 import Types exposing (FarmData, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
@@ -49,7 +50,7 @@ update audioData msg model =
                 Nothing ->
                     ( model
                     , Cmd.none
-                    , Audio.loadAudio AudioLoadResult "/media/Interface_Bleeps_OGG/Bleep_05.ogg"
+                    , Audio.loadAudio AudioLoadResult Theme.bleep
                     )
 
                 Just ( sound, _ ) ->

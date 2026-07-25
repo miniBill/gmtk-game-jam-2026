@@ -1,9 +1,14 @@
-module Theme exposing (planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
+module Theme exposing (bleep, planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
 
 
 planetRadius : Float
 planetRadius =
     0.125
+
+
+bleep : String
+bleep =
+    "media/Interface_Bleeps_OGG/Bleep_05.ogg"
 
 
 planetBarren : String
