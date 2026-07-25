@@ -70,50 +70,19 @@ viewPlaying model =
             let
                 padding : Length
                 padding =
-                    Length.lightYears 1.5
+                    maximumLinkLength
             in
             SvgAttributes.viewBoxWithPadding padding
                 minX
                 minY
                 (Quantity.difference maxX minX)
-                (Quantity.difference maxY minY)
+                (Quantity.difference maxY minY |> Quantity.plus Length.lightYear)
     in
     [ Html.div
-        [ style "width" "100%"
-        , style "display" "block"
-        , style "max-height" "calc(100dvh - 200px)"
-        , style "anchor-name" playingFieldAnchor
-        ]
-        [ let
-            ( planetsViews, background ) =
-                viewPlanets model
-          in
-          Svg.svg
-            [ style "width" "100%"
-            , style "height" "auto"
-            , style "max-height" "100%"
-            , Svg.Attributes.viewBox viewBox
-            ]
-            [ Svg.defs []
-                [ selectionGradient.def
-                , linkGradient.def
-                ]
-            , Svg.g [ Svg.Attributes.id "background" ] background
-            , Svg.g [ Svg.Attributes.id "links" ]
-                (viewLinks model)
-            , Svg.g
-                [ Svg.Attributes.id "planets" ]
-                planetsViews
-            ]
-        ]
-    , Html.div
         [ style "display" "flex"
         , style "gap" "16px"
         , style "flex-direction" "row"
         , style "max-width" "90vw"
-        , style "position" "absolute"
-        , style "position-anchor" playingFieldAnchor
-        , style "position-area" "top"
         ]
         [ Html.div
             [ style "color" "white" ]
@@ -121,6 +90,27 @@ viewPlaying model =
         , Html.div [ style "flex" "1 0" ] []
         , Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ]
         ]
+    , let
+        ( planetsViews, background ) =
+            viewPlanets model
+      in
+      Svg.svg
+        [ style "display" "block"
+        , style "max-width" "100%"
+        , Svg.Attributes.viewBox viewBox
+        ]
+        [ Svg.defs []
+            [ selectionGradient.def
+            , linkGradient.def
+            ]
+        , Svg.g [ Svg.Attributes.id "background" ] background
+        , Svg.g [ Svg.Attributes.id "links" ]
+            (viewLinks model)
+        , Svg.g
+            [ Svg.Attributes.id "planets" ]
+            planetsViews
+        ]
+    , Html.div [ style "flex" "1 0" ] []
     , case model.selected of
         SelectedNone ->
             Html.text ""
@@ -513,11 +503,6 @@ viewFactoryOption factory product =
             )
 
 
-playingFieldAnchor : String
-playingFieldAnchor =
-    "--playing-field"
-
-
 viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
 viewVirginPlanetOption planetId option =
     let
@@ -689,9 +674,6 @@ bottomBox attrs children =
          , style "gap" "8px"
          , style "flex-direction" "column"
          , style "max-width" "90vw"
-         , style "position" "absolute"
-         , style "position-anchor" playingFieldAnchor
-         , style "position-area" "bottom"
          , style "align-items" "center"
          ]
             ++ attrs
