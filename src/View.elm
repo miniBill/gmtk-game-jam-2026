@@ -25,7 +25,6 @@ view : AudioData -> Model -> Html Msg
 view _ model =
     Html.main_
         [ style "display" "flex"
-        , style "flex-direction" "column"
         , style "gap" "8px"
         , style "align-items" "center"
         , style "justify-content" "center"
@@ -42,7 +41,7 @@ view _ model =
                 , Html.button
                     [ Html.Events.onClick (Play { hard = True })
                     ]
-                    [ Html.text "Play game (hard mode - deposit size limit)" ]
+                    [ Html.text "Play game (hard mode - deposit have a size limit)" ]
 
                 -- , Html.button
                 --     [ Html.Events.onClick PlaySound
@@ -102,25 +101,15 @@ viewPlaying model =
                 (Quantity.difference maxX minX)
                 (Quantity.difference maxY minY |> Quantity.plus Length.lightYear)
     in
-    [ Html.div
-        [ style "display" "flex"
-        , style "gap" "16px"
-        , style "flex-direction" "row"
-        , style "max-width" "90vw"
-        ]
-        [ Html.div
-            [ style "color" "white" ]
-            [ Html.text ("Score: " ++ String.fromInt model.score) ]
-        , Html.div [ style "flex" "1 0" ] []
-        , Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ]
-        ]
-    , let
+    [ let
         ( planetsViews, background ) =
             viewPlanets model
       in
       Svg.svg
         [ style "display" "block"
-        , style "max-width" "90vmin"
+        , style "width" "100%"
+        , style "max-height" "100dvh"
+        , style "flex" "9"
         , Svg.Attributes.viewBox viewBox
         ]
         [ Svg.defs []
@@ -135,37 +124,66 @@ viewPlaying model =
             [ Svg.Attributes.id "planets" ]
             planetsViews
         ]
-    , Html.div [ style "flex" "1 0" ] []
-    , case model.selected of
-        SelectedNone ->
-            Html.text ""
+    , Html.div
+        [ style "flex" "1"
+        , style "display" "flex"
+        , style "flex-direction" "column"
+        , style "align-self" "stretch"
+        ]
+        [ case model.selected of
+            SelectedNone ->
+                Html.text ""
 
-        SelectedPlanet planetId ->
-            case IdDict.get planetId model.planets of
-                Nothing ->
-                    Html.text ""
+            SelectedPlanet planetId ->
+                case IdDict.get planetId model.planets of
+                    Nothing ->
+                        Html.text ""
 
-                Just planet ->
-                    bottomBox []
-                        (viewSelectedPlanet planetId planet
-                            ++ (case planet.kind of
-                                    VirginPlanet _ ->
-                                        []
-
-                                    ColonyPlanet _ ->
-                                        []
-
-                                    OccupiedPlanet (FarmPlanet _) ->
-                                        viewLinkPossibilities model planetId planet
-
-                                    OccupiedPlanet (FactoryPlanet _) ->
-                                        viewLinkPossibilities model planetId planet
-
-                                    OccupiedPlanet (DepositPlanet _) ->
-                                        viewLinkPossibilities model planetId planet
-                               )
-                        )
+                    Just planet ->
+                        bottomBox model planetId planet
+        , Html.div
+            [ style "display" "flex"
+            , style "gap" "16px"
+            , style "flex-direction" "row"
+            , style "max-width" "90vw"
+            ]
+            [ Html.div
+                [ style "color" "white" ]
+                [ Html.text ("Score: " ++ String.fromInt model.score) ]
+            , Html.div [ style "flex" "1 0" ] []
+            , Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ]
+            ]
+        ]
     ]
+
+
+bottomBox : PlayingModel -> Id PlanetId -> Planet -> Html PlayingMsg
+bottomBox model planetId planet =
+    Html.div
+        [ style "display" "flex"
+        , style "gap" "8px"
+        , style "flex-direction" "column"
+        , style "max-width" "90vw"
+        , style "align-items" "center"
+        ]
+        (viewSelectedPlanet planetId planet
+            ++ (case planet.kind of
+                    VirginPlanet _ ->
+                        []
+
+                    ColonyPlanet _ ->
+                        []
+
+                    OccupiedPlanet (FarmPlanet _) ->
+                        viewLinkPossibilities model planetId planet
+
+                    OccupiedPlanet (FactoryPlanet _) ->
+                        viewLinkPossibilities model planetId planet
+
+                    OccupiedPlanet (DepositPlanet _) ->
+                        viewLinkPossibilities model planetId planet
+               )
+        )
 
 
 selectionGradient : { ref : String, def : Svg msg }
@@ -745,20 +763,6 @@ icon attrs config =
                             attrs
                    )
             )
-
-
-bottomBox : List (Attribute msg) -> List (Html msg) -> Html msg
-bottomBox attrs children =
-    Html.div
-        ([ style "display" "flex"
-         , style "gap" "8px"
-         , style "flex-direction" "column"
-         , style "max-width" "90vw"
-         , style "align-items" "center"
-         ]
-            ++ attrs
-        )
-        children
 
 
 selectionRow : List (Attribute msg) -> List (Html msg) -> Html msg

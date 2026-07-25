@@ -35,6 +35,7 @@ run model =
         , highlighted = newModel.highlighted
         , score = newModel.score
         , gameMode = newModel.gameMode
+        , rings = newModel.rings
         }
             |> Ok
 
@@ -295,14 +296,9 @@ fillDepositStep availableCapacity queue next content =
 
 updateCountdowns : PlayingModel -> ( PlayingModel, Bool )
 updateCountdowns model =
-    let
-        maxRequired : Int
-        maxRequired =
-            round (toFloat (IdDict.size model.planets) ^ 0.75)
-    in
     IdDict.fold
         (\planetId planet (( modelAcc, lost ) as acc) ->
-            case updateCountdown maxRequired planet of
+            case updateCountdown model.rings planet of
                 PlanetUnchanged ->
                     acc
 
@@ -347,7 +343,7 @@ type CountdownUpdateResult
 
 
 updateCountdown : Int -> Planet -> CountdownUpdateResult
-updateCountdown maxRequired planet =
+updateCountdown rings planet =
     case planet.kind of
         VirginPlanet _ ->
             PlanetUnchanged
@@ -360,13 +356,13 @@ updateCountdown maxRequired planet =
                             | kind =
                                 ColonyPlanet
                                     { colony
-                                        | countdown = 10
-                                        , quantity = quantity
+                                        | countdown = max 5 rings
+                                        , quantity = max 1 quantity
                                         , product = product
                                     }
                         }
                     )
-                    (Random.int 1 (max 1 maxRequired))
+                    (Random.int 1 rings)
                     (case Product.all of
                         [] ->
                             Random.constant Product.Water

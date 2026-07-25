@@ -114,6 +114,7 @@ initPlayingModel gameMode initialSeed =
     , highlighted = HighlightedNone
     , score = 0
     , gameMode = gameMode
+    , rings = 1
     }
 
 
@@ -268,7 +269,7 @@ updatePlanets model =
             (\_ m ->
                 addPlanet model.gameMode 100 maximumDistanceSeen m
             )
-            model
+            { model | rings = model.rings + 1 }
             (List.range 1 toAdd)
 
     else

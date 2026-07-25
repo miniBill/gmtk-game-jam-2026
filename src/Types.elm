@@ -31,6 +31,7 @@ type alias PlayingModel =
     , highlighted : Highlighted
     , score : Int
     , gameMode : GameMode
+    , rings : Int
     }
 
 
