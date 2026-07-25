@@ -306,7 +306,7 @@ updateCountdowns model =
                     in
                     ( { modelAcc
                         | planets =
-                            IdDict.insert planetId newPlanet model.planets
+                            IdDict.insert planetId (Debug.log "newPlanet" newPlanet) modelAcc.planets
                         , currentSeed = newSeed
                       }
                     , lost
@@ -314,7 +314,7 @@ updateCountdowns model =
 
                 PlanetLost newPlanet ->
                     ( { modelAcc
-                        | planets = IdDict.insert planetId newPlanet model.planets
+                        | planets = IdDict.insert planetId newPlanet modelAcc.planets
                       }
                     , True
                     )
@@ -374,7 +374,7 @@ updateCountdown maxRequired planet =
             { planet
                 | kind =
                     OccupiedPlanet
-                        (FarmPlanet { farm | countdown = farm.countdown - 1 })
+                        (FarmPlanet { farm | countdown = max 0 (farm.countdown - 1) })
             }
                 |> Random.constant
                 |> PlanetNotLost
