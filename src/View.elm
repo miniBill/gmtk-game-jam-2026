@@ -96,7 +96,7 @@ viewPlaying model =
       in
       Svg.svg
         [ style "display" "block"
-        , style "max-width" "100%"
+        , style "max-width" "90vmin"
         , Svg.Attributes.viewBox viewBox
         ]
         [ Svg.defs []
@@ -333,7 +333,8 @@ viewLinkPossibility _ config =
                 [ Html.text "To"
                 , Html.img
                     [ Html.Attributes.src (planetImage config.toPlanet)
-                    , style "width" "4vw"
+                    , style "width" "32px"
+                    , style "transform" "translate(0, -4px)"
                     ]
                     []
                 , Html.text config.toPlanet.name
