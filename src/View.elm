@@ -125,7 +125,7 @@ viewPlaying model =
             planetsViews
         ]
     , Html.div
-        [ style "flex" "1 0 80px"
+        [ style "flex" "1 0 200px"
         , style "display" "flex"
         , style "flex-direction" "column"
         , style "align-self" "stretch"
@@ -450,22 +450,26 @@ viewLinkPossibility model config =
                     Product.Dict.get product config.link
                         |> Maybe.withDefault 0
             in
-            Html.input
-                [ Html.Attributes.type_ "number"
-                , Html.Attributes.min "0"
-                , value
-                    |> String.fromInt
-                    |> Html.Attributes.value
-                , Html.Attributes.max (String.fromInt quantity)
-                , Html.Events.onInput
-                    (\v ->
-                        v
-                            |> String.toInt
-                            |> Maybe.withDefault value
-                            |> SetLink config.from config.to product
-                    )
+            Html.div
+                [ style "padding" "4px"
                 ]
-                []
+                [ Html.input
+                    [ Html.Attributes.type_ "number"
+                    , Html.Attributes.min "0"
+                    , value
+                        |> String.fromInt
+                        |> Html.Attributes.value
+                    , Html.Attributes.max (String.fromInt quantity)
+                    , Html.Events.onInput
+                        (\v ->
+                            v
+                                |> String.toInt
+                                |> Maybe.withDefault value
+                                |> SetLink config.from config.to product
+                        )
+                    ]
+                    []
+                ]
     in
     nameView :: List.map viewProductInput config.available
 
