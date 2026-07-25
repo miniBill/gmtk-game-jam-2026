@@ -306,7 +306,7 @@ updateCountdowns model =
                     in
                     ( { modelAcc
                         | planets =
-                            IdDict.insert planetId (Debug.log "newPlanet" newPlanet) modelAcc.planets
+                            IdDict.insert planetId newPlanet modelAcc.planets
                         , currentSeed = newSeed
                       }
                     , lost
