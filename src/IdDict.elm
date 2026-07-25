@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, any, empty, filterMap, fold, get, insert, nextId, update, updateIfExists, values)
+module IdDict exposing (IdDict, any, empty, filterMap, fold, get, insert, insertNew, merge, nextId, size, update, updateIfExists, updateWith, values)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -13,9 +13,14 @@ empty =
     IdDict Dict.empty
 
 
-insert : v -> IdDict k v -> IdDict k v
-insert v (IdDict dict) =
+insertNew : v -> IdDict k v -> IdDict k v
+insertNew v (IdDict dict) =
     IdDict (Dict.insert (nextId dict) v dict)
+
+
+insert : Id k -> v -> IdDict k v -> IdDict k v
+insert (Id k) v (IdDict dict) =
+    IdDict (Dict.insert k v dict)
 
 
 get : Id k -> IdDict k v -> Maybe v
@@ -81,3 +86,44 @@ filterMap f (IdDict dict) =
         Dict.empty
         dict
         |> IdDict
+
+
+merge :
+    (Id k -> l -> o -> o)
+    -> (Id k -> l -> r -> o -> o)
+    -> (Id k -> r -> o -> o)
+    -> IdDict k l
+    -> IdDict k r
+    -> o
+    -> o
+merge left both right (IdDict leftDict) (IdDict rightDict) seed =
+    Dict.merge
+        (\lk lv lacc -> left (Id lk) lv lacc)
+        (\bk lv rv bacc -> both (Id bk) lv rv bacc)
+        (\rk rv racc -> right (Id rk) rv racc)
+        leftDict
+        rightDict
+        seed
+
+
+updateWith :
+    IdDict k new
+    ->
+        { inBoth : Id k -> old -> new -> IdDict k old -> IdDict k old
+        , inNew : Id k -> new -> IdDict k old -> IdDict k old
+        }
+    -> IdDict k old
+    -> IdDict k old
+updateWith new { inBoth, inNew } old =
+    merge
+        (\_ _ acc -> acc)
+        inBoth
+        inNew
+        old
+        new
+        old
+
+
+size : IdDict k v -> Int
+size (IdDict dict) =
+    Dict.size dict

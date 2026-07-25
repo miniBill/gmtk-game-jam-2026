@@ -93,21 +93,23 @@ update audioData msg model =
 
                 Playing playing ->
                     let
-                        ( newPlaying, cmd ) =
+                        ( newPage, cmd ) =
                             updatePlaying playingMsg playing
                     in
-                    ( { model | page = Playing newPlaying }
+                    ( { model | page = newPage }
                     , Cmd.map PlayingMsg cmd
                     , Audio.cmdNone
                     )
+
+                Lost _ ->
+                    ( model, Cmd.none, Audio.cmdNone )
 
 
 initPlayingModel : Int -> PlayingModel
 initPlayingModel initialSeed =
     { initialSeed = initialSeed
     , currentSeed = Random.initialSeed initialSeed
-    , maximumDistanceReched = Quantity.zero
-    , planets = IdDict.empty |> IdDict.insert initialEarth
+    , planets = IdDict.empty |> IdDict.insertNew initialEarth
     , selected = SelectedNone
     , highlighted = HighlightedNone
     , score = 0
@@ -123,12 +125,12 @@ initialEarth =
         ColonyPlanet
             { product = Water
             , quantity = 1
-            , timeout = 10
+            , countdown = 10
             }
     }
 
 
-updatePlaying : PlayingMsg -> PlayingModel -> ( PlayingModel, Cmd PlayingMsg )
+updatePlaying : PlayingMsg -> PlayingModel -> ( Page, Cmd PlayingMsg )
 updatePlaying msg model =
     case msg of
         SelectPlanet id ->
@@ -138,32 +140,36 @@ updatePlaying msg model =
                     SelectedPlanet id
             in
             if new == model.selected then
-                ( { model | selected = SelectedNone }, Cmd.none )
+                ( Playing { model | selected = SelectedNone }, Cmd.none )
 
             else
-                ( { model | selected = new }, Cmd.none )
+                ( Playing { model | selected = new }, Cmd.none )
 
         HighlightPlanet id ->
-            ( { model | highlighted = HighlightedPlanet id }, Cmd.none )
+            ( Playing { model | highlighted = HighlightedPlanet id }, Cmd.none )
 
         HighlightNone ->
-            ( { model | highlighted = HighlightedNone }, Cmd.none )
+            ( Playing { model | highlighted = HighlightedNone }, Cmd.none )
 
         OccupyPlanet id kind ->
-            ( { model
-                | planets =
-                    IdDict.updateIfExists
-                        id
-                        (\planet -> { planet | kind = OccupiedPlanet kind })
-                        model.planets
-              }
+            ( Playing
+                { model
+                    | planets =
+                        IdDict.updateIfExists
+                            id
+                            (\planet -> { planet | kind = OccupiedPlanet kind })
+                            model.planets
+                }
             , Cmd.none
             )
 
         EndTurn ->
-            ( model
-                |> updatePlanets
-                |> Turn.run
+            ( case Turn.run model of
+                Ok newModel ->
+                    Playing (updatePlanets newModel)
+
+                Err newModel ->
+                    Lost newModel
             , Cmd.none
             )
 
@@ -185,6 +191,7 @@ updatePlaying msg model =
                         )
                         model.planets
               }
+                |> Playing
             , Cmd.none
             )
 
@@ -208,6 +215,7 @@ updatePlaying msg model =
                         )
                         model.planets
               }
+                |> Playing
             , Cmd.none
             )
 
@@ -332,7 +340,7 @@ addPlanet budget fromDistance model =
         PlanetGenerated generated ->
             { model
                 | currentSeed = nextSeed
-                , planets = IdDict.insert generated model.planets
+                , planets = IdDict.insertNew generated model.planets
             }
 
         RetryGeneration ->
@@ -378,13 +386,7 @@ farmGenerator count acc =
         Random.constant (List.map FarmPlanet acc)
 
     else
-        Random.map3
-            (\product maxTurns perTurn ->
-                { product = product
-                , timeout = maxTurns
-                , perTurn = perTurn
-                }
-            )
+        Random.map3 FarmData
             (randomProduct (List.map .product acc))
             (Random.int 2 10)
             (Random.int 1 3)

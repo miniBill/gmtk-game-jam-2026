@@ -49,6 +49,19 @@ view _ model =
             Playing playingModel ->
                 viewPlaying playingModel
                     |> List.map (Html.map PlayingMsg)
+
+            Lost lostModel ->
+                [ Html.text ("Final score: " ++ String.fromInt lostModel.score)
+                , Html.button
+                    [ Html.Events.onClick Play
+                    ]
+                    [ Html.text "Play game" ]
+
+                -- , Html.button
+                --     [ Html.Events.onClick PlaySound
+                --     ]
+                --     [ Html.text "Play sound" ]
+                ]
         )
 
 
@@ -410,7 +423,7 @@ viewSelectedPlanet planetId planet =
                 [ style "color" "white"
                 ]
                 [ Product colony.quantity colony.product
-                , Timeout colony.timeout
+                , Countdown colony.countdown
                 ]
             ]
 
@@ -428,7 +441,7 @@ viewSelectedPlanet planetId planet =
                 , style "color" "white"
                 ]
                 [ Product farm.perTurn farm.product
-                , Timeout farm.timeout
+                , Countdown farm.countdown
                 ]
             ]
 
@@ -525,7 +538,7 @@ viewVirginPlanetOption planetId option =
     let
         ( background, children ) =
             case option of
-                FarmPlanet { product, timeout, perTurn } ->
+                FarmPlanet { product, countdown, perTurn } ->
                     ( "#cfc"
                     , [ icon [ style "height" "30px" ]
                             { icon = Phosphor.tractor
@@ -534,7 +547,7 @@ viewVirginPlanetOption planetId option =
                             }
                       , htmlTwoColumnGrid []
                             [ Product perTurn product
-                            , Timeout timeout
+                            , Countdown countdown
                             ]
                       ]
                     )
@@ -596,7 +609,7 @@ htmlTwoColumnGrid attrs children =
 
 type GridRow
     = Product Int Product
-    | Timeout Int
+    | Countdown Int
     | Efficiency Int
     | Capacity Int
 
@@ -631,7 +644,7 @@ gridRowToTuple gridRow =
               }
             )
 
-        Timeout turns ->
+        Countdown turns ->
             ( String.fromInt turns
             , { icon = Phosphor.hourglass
               , title = "Turns"
@@ -839,7 +852,7 @@ viewPlanet { selected, highlighted } id planet =
                                         let
                                             quantity : Int
                                             quantity =
-                                                farm.perTurn * farm.timeout
+                                                farm.perTurn * farm.countdown
                                         in
                                         ( -quantity, Product quantity farm.product )
                                             |> Just
@@ -863,7 +876,7 @@ viewPlanet { selected, highlighted } id planet =
                         , y = cy
                         }
                         [ Product colony.quantity colony.product
-                        , Timeout colony.timeout
+                        , Countdown colony.countdown
                         ]
 
                 OccupiedPlanet (FarmPlanet farm) ->
@@ -872,7 +885,7 @@ viewPlanet { selected, highlighted } id planet =
                         , y = cy
                         }
                         [ Product farm.perTurn farm.product
-                        , Timeout farm.timeout
+                        , Countdown farm.countdown
                         ]
 
                 OccupiedPlanet (FactoryPlanet factory) ->
@@ -919,8 +932,8 @@ planetImage planet =
         ColonyPlanet _ ->
             Theme.planetTerran
 
-        OccupiedPlanet (FarmPlanet { timeout }) ->
-            if timeout == 0 then
+        OccupiedPlanet (FarmPlanet { countdown }) ->
+            if countdown == 0 then
                 Theme.planetBlackHole
 
             else

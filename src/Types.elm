@@ -1,4 +1,4 @@
-module Types exposing (ColonyData, DepositData, FactoryData, FarmData, Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
 import Id exposing (Id, PlanetId)
@@ -20,12 +20,21 @@ type alias Model =
 type Page
     = Menu
     | Playing PlayingModel
+    | Lost LostModel
 
 
 type alias PlayingModel =
     { initialSeed : Int
     , currentSeed : Random.Seed
-    , maximumDistanceReched : Length
+    , planets : IdDict PlanetId Planet
+    , selected : Selected
+    , highlighted : Highlighted
+    , score : Int
+    }
+
+
+type alias LostModel =
+    { initialSeed : Int
     , planets : IdDict PlanetId Planet
     , selected : Selected
     , highlighted : Highlighted
@@ -69,7 +78,7 @@ type OccupiedPlanet
 
 type alias FarmData =
     { product : Product
-    , timeout : Int
+    , countdown : Int
     , perTurn : Int
     }
 
@@ -90,7 +99,7 @@ type alias DepositData =
 type alias ColonyData =
     { product : Product
     , quantity : Int
-    , timeout : Int
+    , countdown : Int
     }
 
 
