@@ -12,6 +12,8 @@ type Product
     | Cheese
     | Pepper
     | Pizza
+    | CoffeeBeans
+    | Coffee
 
 
 all : List Product
@@ -23,6 +25,8 @@ all =
     , Cheese
     , Pepper
     , Pizza
+    , CoffeeBeans
+    , Coffee
     ]
 
 
@@ -58,6 +62,12 @@ toIcon product =
         Milk ->
             Phosphor.cow
 
+        CoffeeBeans ->
+            Phosphor.coffeeBean
+
+        Coffee ->
+            Phosphor.coffee
+
 
 toString : Product -> String
 toString product =
@@ -82,6 +92,12 @@ toString product =
 
         Milk ->
             "Milk"
+
+        CoffeeBeans ->
+            "Coffee Beans"
+
+        Coffee ->
+            "Coffee"
 
 
 toRecipe : Product -> Maybe (List { product : Product, quantity : Int })
@@ -114,6 +130,16 @@ toRecipe product =
             [ { product = Bread, quantity = 1 }
             , { product = Cheese, quantity = 1 }
             , { product = Pepper, quantity = 1 }
+            ]
+                |> Just
+
+        CoffeeBeans ->
+            Nothing
+
+        Coffee ->
+            [ { product = CoffeeBeans, quantity = 1 }
+            , { product = Water, quantity = 2 }
+            , { product = Milk, quantity = 2 }
             ]
                 |> Just
 
@@ -150,3 +176,9 @@ toColor product =
 
         Pizza ->
             std 330
+
+        CoffeeBeans ->
+            "brown"
+
+        Coffee ->
+            "black"
