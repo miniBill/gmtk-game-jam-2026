@@ -1,11 +1,11 @@
 module Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
-import Data exposing (Product)
 import Id exposing (Id, LinkId, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import Point2d exposing (Point2d)
+import Product exposing (Product)
 import Random
 import Time
 

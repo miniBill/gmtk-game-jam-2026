@@ -2,7 +2,6 @@ module View exposing (view)
 
 import Audio exposing (AudioData)
 import BoundingBox2d exposing (BoundingBox2d)
-import Data exposing (Product)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
@@ -11,6 +10,7 @@ import IdDict
 import Length exposing (Length, Meters)
 import Phosphor
 import Point2d
+import Product exposing (Product)
 import Quantity
 import String.Extra
 import Svg exposing (Svg)
@@ -127,10 +127,7 @@ viewPlaying model =
                                     , style "text-align" "center"
                                     , style "font-weight" "bold"
                                     ]
-                                    [ Html.text
-                                        ("Colonize planet "
-                                            ++ String.Extra.toSentenceCase planet.name
-                                        )
+                                    [ Html.text ("Colonize planet " ++ planet.name)
                                     ]
                                 , selectionRow []
                                     (List.map (viewVirginPlanetOption planetId) options)
@@ -143,11 +140,7 @@ viewPlaying model =
                                     , style "text-align" "center"
                                     , style "font-weight" "bold"
                                     ]
-                                    [ Html.text
-                                        ("The planet "
-                                            ++ String.Extra.toSentenceCase planet.name
-                                            ++ " is producing"
-                                        )
+                                    [ Html.text ("The planet " ++ planet.name ++ " is producing")
                                     ]
                                 , htmlTwoColumnGrid
                                     [ style "align-self" "center"
@@ -158,12 +151,22 @@ viewPlaying model =
                                     ]
                                 ]
 
-                            _ ->
-                                [ Html.div
-                                    [ style "background" "white"
-                                    , style "padding" "8px"
+                            OccupiedPlanet (FactoryPlanet factory) ->
+                                [ Html.p
+                                    [ style "display" "block"
+                                    , style "color" "white"
+                                    , style "text-align" "center"
+                                    , style "font-weight" "bold"
                                     ]
-                                    [ Html.text "TODO branch 'OccupiedPlanet _' not implemented" ]
+                                    [ Html.text ("The planet " ++ planet.name ++ " is producing")
+                                    ]
+                                , selectionRow []
+                                    (List.filterMap (viewFactoryOption factory.order) Product.all)
+                                ]
+
+                            OccupiedPlanet (DepositPlanet deposit) ->
+                                [ Html.p [] []
+                                , htmlTwoColumnGrid [] []
                                 ]
                         )
 
@@ -193,6 +196,16 @@ viewPlaying model =
                     ]
                 ]
     ]
+
+
+viewFactoryOption : Maybe Product -> Product -> Maybe (Html msg)
+viewFactoryOption selected product =
+    case Product.toRecipe product of
+        Nothing ->
+            Nothing
+
+        Just recipe ->
+            Just (Html.text "TODO")
 
 
 playingFieldAnchor : String
@@ -305,9 +318,9 @@ gridRowToTuple gridRow =
     case gridRow of
         Product quantity product ->
             ( String.fromInt quantity
-            , { icon = Data.productToIcon product
-              , title = Data.productToString product
-              , color = Just (Data.productToColor product)
+            , { icon = Product.toIcon product
+              , title = Product.toString product
+              , color = Just (Product.toColor product)
               }
             )
 

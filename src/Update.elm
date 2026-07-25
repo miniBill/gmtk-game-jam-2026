@@ -2,14 +2,15 @@ module Update exposing (init, update)
 
 import Angle
 import Audio exposing (AudioCmd, AudioData)
-import Data exposing (Product(..))
 import Id exposing (Id(..), PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
 import List.Extra
 import Point2d exposing (Point2d)
+import Product exposing (Product(..))
 import Quantity
 import Random
+import String.Extra
 import Task
 import Time
 import Types exposing (Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
@@ -339,7 +340,7 @@ randomProduct existing =
     case
         List.Extra.removeWhen
             (\product -> List.member product existing)
-            Data.primary
+            Product.primary
     of
         [] ->
             Random.constant Water
@@ -359,7 +360,7 @@ nameGenerator =
     in
     Random.weighted ( 3, 4 ) [ ( 1, 5 ) ]
         |> Random.andThen (\length -> Random.list length pairGenerator)
-        |> Random.map String.concat
+        |> Random.map (\l -> String.Extra.toSentenceCase (String.concat l))
 
 
 type PlanetGenerationResult

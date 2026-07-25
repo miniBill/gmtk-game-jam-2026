@@ -1,4 +1,4 @@
-module Data exposing (Product(..), primary, productToColor, productToIcon, productToRecipe, productToString)
+module Product exposing (Product(..), all, primary, toColor, toIcon, toRecipe, toString)
 
 import Color.Oklch as Oklch
 import Phosphor
@@ -28,14 +28,14 @@ all =
 
 primary : List Product
 primary =
-    List.filter (\product -> productToRecipe product == Nothing) all
+    List.filter (\product -> toRecipe product == Nothing) all
 
 
-productToIcon :
+toIcon :
     Product
     -> Phosphor.IconWeight
     -> Phosphor.IconVariant
-productToIcon product =
+toIcon product =
     case product of
         Grain ->
             Phosphor.grains
@@ -59,8 +59,8 @@ productToIcon product =
             Phosphor.cow
 
 
-productToString : Product -> String
-productToString product =
+toString : Product -> String
+toString product =
     case product of
         Grain ->
             "Grain"
@@ -84,8 +84,8 @@ productToString product =
             "Milk"
 
 
-productToRecipe : Product -> Maybe (List { product : Product, quantity : number })
-productToRecipe product =
+toRecipe : Product -> Maybe (List { product : Product, quantity : number })
+toRecipe product =
     case product of
         Grain ->
             Nothing
@@ -118,8 +118,8 @@ productToRecipe product =
                 |> Just
 
 
-productToColor : Product -> String
-productToColor product =
+toColor : Product -> String
+toColor product =
     let
         std hue =
             Oklch.toCssString
