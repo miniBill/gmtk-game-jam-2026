@@ -1,12 +1,8 @@
-module Id exposing (Id(..), LinkId, PlanetId, toString)
+module Id exposing (Id(..), PlanetId, toString)
 
 
 type PlanetId
     = PlanetId Never
-
-
-type LinkId
-    = LinkId Never
 
 
 type Id a

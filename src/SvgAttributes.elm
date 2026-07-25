@@ -1,4 +1,4 @@
-module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, transformTranslate, viewBox, viewBoxWithPadding, width, x, y)
+module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, transformTranslate, viewBox, viewBoxWithPadding, width, x, x1, x2, y, y1, y2)
 
 import Length exposing (Length)
 import Quantity
@@ -71,6 +71,26 @@ rx v =
 ry : Float -> Svg.Attribute msg
 ry v =
     Svg.Attributes.ry (Round.round 4 v)
+
+
+x1 : Float -> Attribute msg
+x1 v =
+    Svg.Attributes.x1 (Round.round 4 v)
+
+
+y1 : Float -> Attribute msg
+y1 v =
+    Svg.Attributes.y1 (Round.round 4 v)
+
+
+x2 : Float -> Attribute msg
+x2 v =
+    Svg.Attributes.x2 (Round.round 4 v)
+
+
+y2 : Float -> Attribute msg
+y2 v =
+    Svg.Attributes.y2 (Round.round 4 v)
 
 
 fontSize : Float -> Svg.Attribute msg

@@ -5,14 +5,13 @@ import BoundingBox2d exposing (BoundingBox2d)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
-import Id exposing (Id, LinkId, PlanetId)
+import Id exposing (Id, PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
 import Phosphor
 import Point2d
 import Product exposing (Product)
 import Quantity
-import String.Extra
 import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
@@ -90,24 +89,28 @@ viewPlaying model =
             , style "max-height" "100%"
             , Svg.Attributes.viewBox viewBox
             ]
-            [ viewEarth model
+            [ Svg.g [ Svg.Attributes.id "links" ]
+                (viewLinks model)
             , Svg.g
                 [ Svg.Attributes.id "planets" ]
                 (viewPlanets model)
-            , Svg.g [ Svg.Attributes.id "links" ]
-                (viewLinks model)
             ]
         ]
     , Html.div
         [ style "display" "flex"
         , style "gap" "16px"
-        , style "flex-direction" "column"
+        , style "flex-direction" "row"
         , style "max-width" "90vw"
         , style "position" "absolute"
         , style "position-anchor" playingFieldAnchor
         , style "position-area" "top"
         ]
-        [ Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ] ]
+        [ Html.div
+            [ style "color" "white" ]
+            [ Html.text ("Score: " ++ String.fromInt model.score) ]
+        , Html.div [ style "flex" "1 0" ] []
+        , Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ]
+        ]
     , case model.selected of
         SelectedNone ->
             Html.text ""
@@ -118,34 +121,64 @@ viewPlaying model =
                     Html.text ""
 
                 Just planet ->
-                    bottomBox [] (viewSelectedPlanet planetId planet)
-
-        SelectedLink _ ->
-            bottomBox []
-                [ Html.div
-                    [ style "background" "white"
-                    , style "padding" "8px"
-                    ]
-                    [ Html.text "TODO branch 'SelectedLink _' not implemented" ]
-                ]
-
-        SelectedEarth ->
-            bottomBox []
-                [ Html.div
-                    [ style "background" "white"
-                    , style "padding" "8px"
-                    ]
-                    [ Html.text "Earth "
-                    , Html.span
-                        [ style "font-weight" "bold" ]
-                        [ Html.text "needs" ]
-                    , htmlTwoColumnGrid []
-                        [ Product model.earthNeed.quantity model.earthNeed.product
-                        , Timeout model.earthNeed.timeout
-                        ]
-                    ]
-                ]
+                    bottomBox []
+                        (viewSelectedPlanet planetId planet
+                            ++ viewLinkPossibilities model planetId planet
+                        )
     ]
+
+
+maximumLinkLength : Length
+maximumLinkLength =
+    Length.lightYears 1.5
+
+
+viewLinkPossibilities : PlayingModel -> Id PlanetId -> Planet -> List (Html PlayingMsg)
+viewLinkPossibilities model from fromPlanet =
+    IdDict.fold
+        (\to toPlanet acc ->
+            if Point2d.distanceFrom fromPlanet.position toPlanet.position |> Quantity.lessThan maximumLinkLength then
+                viewLinkPossibility model
+                    { from = from
+                    , fromPlanet = fromPlanet
+                    , to = to
+                    , toPlanet = toPlanet
+                    }
+                    (IdDict.get to fromPlanet.links |> Maybe.withDefault [])
+                    :: acc
+
+            else
+                acc
+        )
+        []
+        model.planets
+
+
+viewLinkPossibility :
+    PlayingModel
+    ->
+        { from : Id PlanetId
+        , fromPlanet : Planet
+        , to : Id PlanetId
+        , toPlanet : { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
+        }
+    -> List { product : Product, quantity : Int }
+    -> Html PlayingMsg
+viewLinkPossibility arg1 arg2 arg3 =
+    Html.p
+        [ style "display" "block"
+        , style "color" "white"
+        , style "text-align" "center"
+        , style "font-weight" "bold"
+        ]
+        [ Html.text
+            (Debug.toString
+                { arg1 = arg1
+                , arg2 = arg2
+                , arg3 = arg3
+                }
+            )
+        ]
 
 
 viewSelectedPlanet : Id PlanetId -> Planet -> List (Html PlayingMsg)
@@ -162,6 +195,22 @@ viewSelectedPlanet planetId planet =
                 ]
             , selectionRow []
                 (List.map (viewVirginPlanetOption planetId) options)
+            ]
+
+        ColonyPlanet colony ->
+            [ Html.div
+                [ style "background" "white"
+                , style "padding" "8px"
+                ]
+                [ Html.text "Earth "
+                , Html.span
+                    [ style "font-weight" "bold" ]
+                    [ Html.text "needs" ]
+                , htmlTwoColumnGrid []
+                    [ Product colony.quantity colony.product
+                    , Timeout colony.timeout
+                    ]
+                ]
             ]
 
         OccupiedPlanet (FarmPlanet farm) ->
@@ -467,40 +516,6 @@ selectionRow attrs children =
         children
 
 
-viewEarth : PlayingModel -> Svg PlayingMsg
-viewEarth model =
-    Svg.g
-        [ Svg.Attributes.id "earth"
-        , Svg.Events.onClick SelectEarth
-        , Svg.Attributes.cursor "pointer"
-        ]
-        [ if model.selected == SelectedEarth then
-            Svg.circle
-                [ SvgAttributes.r (Theme.planetRadius * 1.3)
-                , Svg.Attributes.fill "green"
-                ]
-                []
-
-          else
-            Svg.text ""
-        , Svg.image
-            [ SvgAttributes.x -Theme.planetRadius
-            , SvgAttributes.y -Theme.planetRadius
-            , SvgAttributes.width (Theme.planetRadius * 2)
-            , SvgAttributes.height (Theme.planetRadius * 2)
-            , Svg.Attributes.xlinkHref Theme.planetTerran
-            ]
-            []
-        , svgTwoColumnGrid
-            { x = Quantity.zero
-            , y = Quantity.zero
-            }
-            [ Product model.earthNeed.quantity model.earthNeed.product
-            , Timeout model.earthNeed.timeout
-            ]
-        ]
-
-
 svgTwoColumnGrid :
     { x : Length
     , y : Length
@@ -570,6 +585,9 @@ viewPlanet selected id planet =
                 VirginPlanet _ ->
                     Theme.planetIce
 
+                ColonyPlanet _ ->
+                    Theme.planetTerran
+
                 OccupiedPlanet (FarmPlanet { timeout }) ->
                     if timeout == 0 then
                         Theme.planetBlackHole
@@ -611,6 +629,7 @@ viewPlanet selected id planet =
             else
                 []
 
+        bottomView : Svg msg
         bottomView =
             case planet.kind of
                 VirginPlanet options ->
@@ -639,6 +658,15 @@ viewPlanet selected id planet =
                             { x = cx
                             , y = cy
                             }
+
+                ColonyPlanet colony ->
+                    svgTwoColumnGrid
+                        { x = cx
+                        , y = cy
+                        }
+                        [ Product colony.quantity colony.product
+                        , Timeout colony.timeout
+                        ]
 
                 OccupiedPlanet (FarmPlanet farm) ->
                     svgTwoColumnGrid
@@ -675,6 +703,8 @@ viewPlanet selected id planet =
     Svg.g
         [ Svg.Attributes.id (Id.toString id)
         , Svg.Events.onClick (SelectPlanet id)
+        , Svg.Events.onMouseOver (HighlightPlanet id)
+        , Svg.Events.onMouseOut HighlightNone
         , Svg.Attributes.cursor "pointer"
         ]
         (img :: bottomView :: selectionView)
@@ -682,9 +712,45 @@ viewPlanet selected id planet =
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)
 viewLinks model =
-    IdDict.fold (\k v acc -> viewLink k v :: acc) [] model.links
+    IdDict.fold
+        (\from fromPlanet acc ->
+            IdDict.fold
+                (\to link iacc ->
+                    case viewLink model from fromPlanet to link of
+                        Nothing ->
+                            iacc
+
+                        Just linkView ->
+                            linkView :: iacc
+                )
+                acc
+                fromPlanet.links
+        )
+        []
+        model.planets
 
 
-viewLink : Id LinkId -> Link -> Svg PlayingMsg
-viewLink id link =
-    Svg.text_ [] [ Svg.text "TODO: viewLink" ]
+viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> Maybe (Svg PlayingMsg)
+viewLink model from fromPlanet to _ =
+    IdDict.get to model.planets
+        |> Maybe.map
+            (\toPlanet ->
+                let
+                    ( x1, y1 ) =
+                        Point2d.coordinates fromPlanet.position
+
+                    ( x2, y2 ) =
+                        Point2d.coordinates toPlanet.position
+                in
+                Svg.line
+                    [ SvgAttributes.x1 (Length.inLightYears x1)
+                    , SvgAttributes.y1 (Length.inLightYears y1)
+                    , SvgAttributes.x2 (Length.inLightYears x2)
+                    , SvgAttributes.y2 (Length.inLightYears y2)
+                    , Svg.Events.onClick (SelectPlanet from)
+                    , Svg.Attributes.stroke "white"
+                    , Svg.Events.onMouseOver (HighlightLink from to)
+                    , Svg.Events.onMouseOut HighlightNone
+                    ]
+                    []
+            )

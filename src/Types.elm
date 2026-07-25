@@ -1,7 +1,7 @@
-module Types exposing (DepositData, FactoryData, FarmData, Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
-import Id exposing (Id, LinkId, PlanetId)
+import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import Point2d exposing (Point2d)
@@ -26,36 +26,38 @@ type alias PlayingModel =
     , currentSeed : Random.Seed
     , maximumDistanceReched : Length
     , planets : IdDict PlanetId Planet
-    , links : IdDict LinkId Link
     , selected : Selected
-    , earthNeed : { product : Product, quantity : Int, timeout : Int }
-    , highlightPlanet : Maybe PlanetId
+    , highlighted : Highlighted
+    , score : Int
     }
 
 
 type Selected
     = SelectedPlanet (Id PlanetId)
-    | SelectedLink (Id LinkId)
-    | SelectedEarth
     | SelectedNone
 
 
-type alias Link =
-    { from : Id PlanetId
-    , to : Id PlanetId
-    , transport : List { product : Product, quantity : Int }
-    }
+type Highlighted
+    = HighlightedPlanet (Id PlanetId)
+    | HighlightedLink (Id PlanetId) (Id PlanetId)
+    | HighlightedNone
 
 
 type alias Planet =
-    { name : String
+    { links : IdDict PlanetId Link
+    , name : String
     , position : Point2d Meters ()
     , kind : PlanetKind
     }
 
 
+type alias Link =
+    List { product : Product, quantity : Int }
+
+
 type PlanetKind
     = VirginPlanet (List OccupiedPlanet)
+    | ColonyPlanet ColonyData
     | OccupiedPlanet OccupiedPlanet
 
 
@@ -85,6 +87,13 @@ type alias DepositData =
     }
 
 
+type alias ColonyData =
+    { product : Product
+    , quantity : Int
+    , timeout : Int
+    }
+
+
 type alias Recipe =
     List
         { product : Product
@@ -102,9 +111,10 @@ type Msg
 
 
 type PlayingMsg
-    = TryLink (Id PlanetId) (Id PlanetId)
-    | SelectPlanet (Id PlanetId)
-    | SelectEarth
+    = SelectPlanet (Id PlanetId)
     | OccupyPlanet (Id PlanetId) OccupiedPlanet
     | EndTurn
     | SetFactoryProduction (Id PlanetId) (Maybe Product)
+    | HighlightLink (Id PlanetId) (Id PlanetId)
+    | HighlightPlanet (Id PlanetId)
+    | HighlightNone

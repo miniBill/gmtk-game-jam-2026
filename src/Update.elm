@@ -14,17 +14,12 @@ import String.Extra
 import Task
 import Theme
 import Time
-import Types exposing (FarmData, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FarmData, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 minimumPlanetDistance : Length
 minimumPlanetDistance =
     Length.lightYears 0.75
-
-
-maximumLinkLength : Length
-maximumLinkLength =
-    Length.lightYears 1.5
 
 
 ringWidth : Length
@@ -77,10 +72,10 @@ update audioData msg model =
             )
 
         AudioLoadResult (Err e) ->
-            -- let
-            --     _ =
-            --         Debug.log "AudioLoadResult (Err e)" e
-            -- in
+            let
+                _ =
+                    Debug.log "AudioLoadResult (Err e)" e
+            in
             ( model, Cmd.none, Audio.cmdNone )
 
         AudioLoadResult (Ok sound) ->
@@ -109,21 +104,31 @@ initPlayingModel : Int -> PlayingModel
 initPlayingModel initialSeed =
     { initialSeed = initialSeed
     , currentSeed = Random.initialSeed initialSeed
-    , links = IdDict.empty
     , maximumDistanceReched = Quantity.zero
-    , planets = IdDict.empty
+    , planets = IdDict.empty |> IdDict.insert initialEarth
     , selected = SelectedNone
-    , earthNeed = { product = Water, quantity = 1, timeout = 10 }
-    , highlightPlanet = Nothing
+    , highlighted = HighlightedNone
+    , score = 0
+    }
+
+
+initialEarth : Planet
+initialEarth =
+    { name = "Terra"
+    , position = Point2d.origin
+    , links = IdDict.empty
+    , kind =
+        ColonyPlanet
+            { product = Water
+            , quantity = 1
+            , timeout = 10
+            }
     }
 
 
 updatePlaying : PlayingMsg -> PlayingModel -> ( PlayingModel, Cmd PlayingMsg )
 updatePlaying msg model =
     case msg of
-        TryLink from to ->
-            ( model, Cmd.none )
-
         SelectPlanet id ->
             let
                 new : Selected
@@ -136,12 +141,14 @@ updatePlaying msg model =
             else
                 ( { model | selected = new }, Cmd.none )
 
-        SelectEarth ->
-            if SelectedEarth == model.selected then
-                ( { model | selected = SelectedNone }, Cmd.none )
+        HighlightLink from to ->
+            ( { model | highlighted = HighlightedLink from to }, Cmd.none )
 
-            else
-                ( { model | selected = SelectedEarth }, Cmd.none )
+        HighlightPlanet id ->
+            ( { model | highlighted = HighlightedPlanet id }, Cmd.none )
+
+        HighlightNone ->
+            ( { model | highlighted = HighlightedNone }, Cmd.none )
 
         OccupyPlanet id kind ->
             ( { model
@@ -196,6 +203,11 @@ updatePlanets model =
                             , Quantity.max distance maxSeen
                             )
 
+                        ColonyPlanet _ ->
+                            ( Quantity.max distance maxOccupied
+                            , Quantity.max distance maxSeen
+                            )
+
                         OccupiedPlanet _ ->
                             ( Quantity.max distance maxOccupied
                             , Quantity.max distance maxSeen
@@ -236,7 +248,7 @@ addPlanet budget fromDistance model =
 
         planetGenerator : Random.Generator PlanetGenerationResult
         planetGenerator =
-            Random.map3 Planet
+            Random.map3 (Planet IdDict.empty)
                 nameGenerator
                 positionGenerator
                 kindGenerator
