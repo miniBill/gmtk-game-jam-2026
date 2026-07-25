@@ -183,12 +183,12 @@ linkGradient =
             ]
             [ Svg.stop
                 [ Svg.Attributes.offset "0%"
-                , Svg.Attributes.stopColor "red"
+                , Svg.Attributes.stopColor "blue"
                 ]
                 []
             , Svg.stop
                 [ Svg.Attributes.offset "100%"
-                , Svg.Attributes.stopColor "blue"
+                , Svg.Attributes.stopColor "red"
                 ]
                 []
             ]
