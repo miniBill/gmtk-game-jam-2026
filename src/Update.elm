@@ -356,7 +356,7 @@ depositGenerator =
                 , content = Product.Dict.empty
                 }
         )
-        (Random.int 5 10)
+        (Random.int 10 25)
 
 
 factoryGenerator : Random.Generator OccupiedPlanet
