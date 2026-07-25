@@ -118,6 +118,7 @@ viewPlaying model =
         [ Svg.defs []
             [ selectionGradient.def
             , linkGradient.def
+            , fadeFilter.def
             ]
         , Svg.g [ Svg.Attributes.id "background" ] background
         , Svg.g [ Svg.Attributes.id "links" ]
@@ -205,6 +206,26 @@ linkGradient =
             , Svg.stop
                 [ Svg.Attributes.offset "100%"
                 , Svg.Attributes.stopColor "red"
+                ]
+                []
+            ]
+    }
+
+
+fadeFilter : { ref : String, def : Svg msg }
+fadeFilter =
+    let
+        id : String
+        id =
+            "fade-filter"
+    in
+    { ref = "url(#" ++ id ++ ")"
+    , def =
+        Svg.filter [ Svg.Attributes.id id ]
+            [ Svg.feColorMatrix
+                [ Svg.Attributes.type_ "saturate"
+                , Svg.Attributes.in_ "SourceGraphic"
+                , Svg.Attributes.values "0.2"
                 ]
                 []
             ]
@@ -361,10 +382,19 @@ viewLinkPossibility model config =
                 , Html.Events.onMouseLeave HighlightNone
                 ]
                 [ Html.text "To"
-                , Html.img
-                    [ Html.Attributes.src (planetImage config.toPlanet)
+                , let
+                    ( src, { fade } ) =
+                        planetImage config.toPlanet
+                  in
+                  Html.img
+                    [ Html.Attributes.src src
                     , style "width" "32px"
                     , style "transform" "translate(0, -4px)"
+                    , if fade then
+                        style "filter" "saturate(10%)"
+
+                      else
+                        Html.Attributes.classList []
                     ]
                     []
                 , Html.text config.toPlanet.name
@@ -806,12 +836,21 @@ viewPlanet { selected, highlighted } id planet =
 
         img : Svg PlayingMsg
         img =
+            let
+                ( src, { fade } ) =
+                    planetImage planet
+            in
             Svg.image
                 [ SvgAttributes.x x
                 , SvgAttributes.y y
                 , SvgAttributes.width (Theme.planetRadius * 2)
                 , SvgAttributes.height (Theme.planetRadius * 2)
-                , Svg.Attributes.xlinkHref (planetImage planet)
+                , Svg.Attributes.xlinkHref src
+                , if fade then
+                    Svg.Attributes.filter fadeFilter.ref
+
+                  else
+                    Svg.Attributes.style ""
                 ]
                 []
 
@@ -926,27 +965,23 @@ viewPlanet { selected, highlighted } id planet =
     )
 
 
-planetImage : Planet -> String
+planetImage : Planet -> ( String, { fade : Bool } )
 planetImage planet =
     case planet.kind of
         VirginPlanet _ ->
-            Theme.planetIce
+            ( Theme.planetIce, { fade = False } )
 
-        ColonyPlanet _ ->
-            Theme.planetTerran
+        ColonyPlanet { countdown } ->
+            ( Theme.planetBlackHole, { fade = countdown <= 0 } )
 
         OccupiedPlanet (FarmPlanet { countdown }) ->
-            if countdown == 0 then
-                Theme.planetBlackHole
-
-            else
-                Theme.planetTerran
+            ( Theme.planetTerran, { fade = countdown <= 0 } )
 
         OccupiedPlanet (FactoryPlanet _) ->
-            Theme.planetLava
+            ( Theme.planetLava, { fade = False } )
 
         OccupiedPlanet (DepositPlanet _) ->
-            Theme.planetBarren
+            ( Theme.planetBarren, { fade = False } )
 
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)
