@@ -123,7 +123,22 @@ viewPlaying model =
                 Just planet ->
                     bottomBox []
                         (viewSelectedPlanet planetId planet
-                            ++ viewLinkPossibilities model planetId planet
+                            ++ (case planet.kind of
+                                    VirginPlanet _ ->
+                                        []
+
+                                    ColonyPlanet _ ->
+                                        []
+
+                                    OccupiedPlanet (FarmPlanet _) ->
+                                        viewLinkPossibilities model planetId planet
+
+                                    OccupiedPlanet (FactoryPlanet _) ->
+                                        viewLinkPossibilities model planetId planet
+
+                                    OccupiedPlanet (DepositPlanet _) ->
+                                        viewLinkPossibilities model planetId planet
+                               )
                         )
     ]
 
@@ -135,23 +150,62 @@ maximumLinkLength =
 
 viewLinkPossibilities : PlayingModel -> Id PlanetId -> Planet -> List (Html PlayingMsg)
 viewLinkPossibilities model from fromPlanet =
-    IdDict.fold
-        (\to toPlanet acc ->
-            if Point2d.distanceFrom fromPlanet.position toPlanet.position |> Quantity.lessThan maximumLinkLength then
-                viewLinkPossibility model
-                    { from = from
-                    , fromPlanet = fromPlanet
-                    , to = to
-                    , toPlanet = toPlanet
-                    }
-                    (IdDict.get to fromPlanet.links |> Maybe.withDefault [])
-                    :: acc
+    let
+        addLinks to toPlanet acc =
+            viewLinkPossibility model
+                { from = from
+                , fromPlanet = fromPlanet
+                , to = to
+                , toPlanet = toPlanet
+                }
+                (IdDict.get to fromPlanet.links |> Maybe.withDefault [])
+                ++ acc
 
-            else
-                acc
-        )
-        []
-        model.planets
+        children : List (Html PlayingMsg)
+        children =
+            IdDict.fold
+                (\to toPlanet acc ->
+                    if Point2d.distanceFrom fromPlanet.position toPlanet.position |> Quantity.lessThan maximumLinkLength then
+                        case toPlanet.kind of
+                            VirginPlanet _ ->
+                                acc
+
+                            ColonyPlanet _ ->
+                                addLinks to toPlanet acc
+
+                            OccupiedPlanet (FarmPlanet _) ->
+                                acc
+
+                            OccupiedPlanet (FactoryPlanet _) ->
+                                addLinks to toPlanet acc
+
+                            OccupiedPlanet (DepositPlanet _) ->
+                                addLinks to toPlanet acc
+
+                    else
+                        acc
+                )
+                []
+                model.planets
+
+        products =
+            []
+
+        columns : String
+        columns =
+            "auto"
+                |> List.repeat (List.length products + 1)
+                |> String.join " "
+    in
+    [ Html.p [ style "color" "white" ] [ Html.text "and is sending" ]
+    , Html.div
+        [ style "display" "grid"
+        , style "grid-template-columns" columns
+        , style "color" "white"
+        , style "gap" "8px"
+        ]
+        children
+    ]
 
 
 viewLinkPossibility :
@@ -163,22 +217,21 @@ viewLinkPossibility :
         , toPlanet : { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
         }
     -> List { product : Product, quantity : Int }
-    -> Html PlayingMsg
-viewLinkPossibility arg1 arg2 arg3 =
-    Html.p
-        [ style "display" "block"
-        , style "color" "white"
-        , style "text-align" "center"
-        , style "font-weight" "bold"
+    -> List (Html PlayingMsg)
+viewLinkPossibility model endpoints link =
+    [ Html.div
+        [ style "display" "flex"
+        , style "gap" "8px"
         ]
-        [ Html.text
-            (Debug.toString
-                { arg1 = arg1
-                , arg2 = arg2
-                , arg3 = arg3
-                }
-            )
+        [ Html.text "To"
+        , Html.img
+            [ Html.Attributes.src (planetImage endpoints.toPlanet)
+            , style "width" "4vw"
+            ]
+            []
+        , Html.text endpoints.toPlanet.name
         ]
+    ]
 
 
 viewSelectedPlanet : Id PlanetId -> Planet -> List (Html PlayingMsg)
@@ -198,18 +251,18 @@ viewSelectedPlanet planetId planet =
             ]
 
         ColonyPlanet colony ->
-            [ Html.div
-                [ style "background" "white"
-                , style "padding" "8px"
-                ]
-                [ Html.text "Earth "
+            [ Html.p
+                [ style "color" "white" ]
+                [ Html.text (planet.name ++ " ")
                 , Html.span
                     [ style "font-weight" "bold" ]
                     [ Html.text "needs" ]
-                , htmlTwoColumnGrid []
-                    [ Product colony.quantity colony.product
-                    , Timeout colony.timeout
-                    ]
+                ]
+            , htmlTwoColumnGrid
+                [ style "color" "white"
+                ]
+                [ Product colony.quantity colony.product
+                , Timeout colony.timeout
                 ]
             ]
 
@@ -490,12 +543,13 @@ bottomBox : List (Attribute msg) -> List (Html msg) -> Html msg
 bottomBox attrs children =
     Html.div
         ([ style "display" "flex"
-         , style "gap" "16px"
+         , style "gap" "8px"
          , style "flex-direction" "column"
          , style "max-width" "90vw"
          , style "position" "absolute"
          , style "position-anchor" playingFieldAnchor
          , style "position-area" "bottom"
+         , style "align-items" "center"
          ]
             ++ attrs
         )
@@ -579,28 +633,6 @@ viewPlanet selected id planet =
         y =
             Length.inLightYears cy - Theme.planetRadius
 
-        src : String
-        src =
-            case planet.kind of
-                VirginPlanet _ ->
-                    Theme.planetIce
-
-                ColonyPlanet _ ->
-                    Theme.planetTerran
-
-                OccupiedPlanet (FarmPlanet { timeout }) ->
-                    if timeout == 0 then
-                        Theme.planetBlackHole
-
-                    else
-                        Theme.planetTerran
-
-                OccupiedPlanet (FactoryPlanet _) ->
-                    Theme.planetLava
-
-                OccupiedPlanet (DepositPlanet _) ->
-                    Theme.planetBarren
-
         img : Svg PlayingMsg
         img =
             Svg.image
@@ -608,7 +640,7 @@ viewPlanet selected id planet =
                 , SvgAttributes.y y
                 , SvgAttributes.width (Theme.planetRadius * 2)
                 , SvgAttributes.height (Theme.planetRadius * 2)
-                , Svg.Attributes.xlinkHref src
+                , Svg.Attributes.xlinkHref (planetImage planet)
                 ]
                 []
 
@@ -708,6 +740,29 @@ viewPlanet selected id planet =
         , Svg.Attributes.cursor "pointer"
         ]
         (img :: bottomView :: selectionView)
+
+
+planetImage : Planet -> String
+planetImage planet =
+    case planet.kind of
+        VirginPlanet _ ->
+            Theme.planetIce
+
+        ColonyPlanet _ ->
+            Theme.planetTerran
+
+        OccupiedPlanet (FarmPlanet { timeout }) ->
+            if timeout == 0 then
+                Theme.planetBlackHole
+
+            else
+                Theme.planetTerran
+
+        OccupiedPlanet (FactoryPlanet _) ->
+            Theme.planetLava
+
+        OccupiedPlanet (DepositPlanet _) ->
+            Theme.planetBarren
 
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)
