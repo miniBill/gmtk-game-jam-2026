@@ -142,9 +142,6 @@ updatePlaying msg model =
             else
                 ( { model | selected = new }, Cmd.none )
 
-        HighlightLink from to ->
-            ( { model | highlighted = HighlightedLink from to }, Cmd.none )
-
         HighlightPlanet id ->
             ( { model | highlighted = HighlightedPlanet id }, Cmd.none )
 

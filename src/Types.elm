@@ -40,7 +40,6 @@ type Selected
 
 type Highlighted
     = HighlightedPlanet (Id PlanetId)
-    | HighlightedLink (Id PlanetId) (Id PlanetId)
     | HighlightedNone
 
 
@@ -116,7 +115,6 @@ type PlayingMsg
     | OccupyPlanet (Id PlanetId) OccupiedPlanet
     | EndTurn
     | SetFactoryProduction (Id PlanetId) (Maybe Product)
-    | HighlightLink (Id PlanetId) (Id PlanetId)
     | HighlightPlanet (Id PlanetId)
     | HighlightNone
     | SetLink (Id PlanetId) (Id PlanetId) Product Int

@@ -18,7 +18,7 @@ import Svg.Attributes
 import Svg.Events
 import SvgAttributes
 import Theme
-import Types exposing (FactoryData, Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FactoryData, Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -290,7 +290,10 @@ viewLinkPossibilities model from fromPlanet =
             Html.div [] []
                 :: List.map
                     (\{ product } ->
-                        icon []
+                        icon
+                            [ style "padding" "4px"
+                            , style "height" "28px"
+                            ]
                             { icon = Product.toIcon product
                             , title = Product.toString product
                             , color = Just (Product.toColor product)
@@ -303,7 +306,6 @@ viewLinkPossibilities model from fromPlanet =
         [ style "display" "grid"
         , style "grid-template-columns" columns
         , style "color" "white"
-        , style "gap" "8px"
         ]
         (header ++ children)
     ]
@@ -320,13 +322,19 @@ viewLinkPossibility :
         , link : Link
         }
     -> List (Html PlayingMsg)
-viewLinkPossibility _ config =
+viewLinkPossibility model config =
     let
         nameView : Html PlayingMsg
         nameView =
             Html.div
                 [ style "display" "flex"
                 , style "gap" "8px"
+                , style "padding" "4px"
+                , if model.highlighted == HighlightedPlanet config.to then
+                    style "background" "#fff8"
+
+                  else
+                    Html.Attributes.classList []
                 , Html.Events.onMouseEnter (HighlightPlanet config.to)
                 , Html.Events.onMouseLeave HighlightNone
                 ]
@@ -746,7 +754,7 @@ viewPlanets model =
         (\k v ( acc, bgAcc ) ->
             let
                 ( e, bg ) =
-                    viewPlanet model.selected k v
+                    viewPlanet model k v
             in
             ( e :: acc, bg ++ bgAcc )
         )
@@ -755,11 +763,11 @@ viewPlanets model =
 
 
 viewPlanet :
-    Selected
+    PlayingModel
     -> Id PlanetId
     -> Planet
     -> ( Svg PlayingMsg, List (Svg msg) )
-viewPlanet selected id planet =
+viewPlanet { selected, highlighted } id planet =
     let
         ( cx, cy ) =
             Point2d.coordinates planet.position
@@ -793,6 +801,17 @@ viewPlanet selected id planet =
                     , SvgAttributes.strokeWidth 0.01
                     , Svg.Attributes.stroke "green"
                     , Svg.Attributes.fill selectionGradient.ref
+                    ]
+                    []
+                ]
+
+            else if highlighted == HighlightedPlanet id then
+                [ Svg.circle
+                    [ SvgAttributes.cx (Length.inLightYears cx)
+                    , SvgAttributes.cy (Length.inLightYears cy)
+                    , SvgAttributes.r (Theme.planetRadius * 1.2)
+                    , SvgAttributes.strokeWidth 0.01
+                    , Svg.Attributes.fill "white"
                     ]
                     []
                 ]
@@ -950,8 +969,6 @@ viewLink model from fromPlanet to link =
                         , Svg.Events.onClick (SelectPlanet from)
                         , SvgAttributes.strokeWidth 0.01
                         , Svg.Attributes.stroke linkGradient.ref
-                        , Svg.Events.onMouseOver (HighlightLink from to)
-                        , Svg.Events.onMouseOut HighlightNone
                         ]
                         []
                 )
