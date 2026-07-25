@@ -294,6 +294,19 @@ viewLinkPossibilities model from fromPlanet =
             "auto"
                 |> List.repeat (List.length products + 1)
                 |> String.join " "
+
+        header : List (Html msg)
+        header =
+            Html.div [] []
+                :: List.map
+                    (\{ product } ->
+                        icon []
+                            { icon = Product.toIcon product
+                            , title = Product.toString product
+                            , color = Just (Product.toColor product)
+                            }
+                    )
+                    products
     in
     [ Html.p [ style "color" "white" ] [ Html.text "and is sending" ]
     , Html.div
@@ -302,7 +315,7 @@ viewLinkPossibilities model from fromPlanet =
         , style "color" "white"
         , style "gap" "8px"
         ]
-        children
+        (header ++ children)
     ]
 
 
