@@ -114,6 +114,7 @@ initPlayingModel initialSeed =
     , planets = IdDict.empty
     , selected = SelectedNone
     , earthNeed = { product = Water, quantity = 1, timeout = 10 }
+    , highlightPlanet = Nothing
     }
 
 

@@ -118,86 +118,7 @@ viewPlaying model =
                     Html.text ""
 
                 Just planet ->
-                    bottomBox []
-                        (case planet.kind of
-                            VirginPlanet options ->
-                                [ Html.p
-                                    [ style "display" "block"
-                                    , style "color" "white"
-                                    , style "text-align" "center"
-                                    , style "font-weight" "bold"
-                                    ]
-                                    [ Html.text ("Colonize planet " ++ planet.name)
-                                    ]
-                                , selectionRow []
-                                    (List.map (viewVirginPlanetOption planetId) options)
-                                ]
-
-                            OccupiedPlanet (FarmPlanet farm) ->
-                                [ Html.p
-                                    [ style "display" "block"
-                                    , style "color" "white"
-                                    , style "text-align" "center"
-                                    , style "font-weight" "bold"
-                                    ]
-                                    [ Html.text ("The planet " ++ planet.name ++ " is producing")
-                                    ]
-                                , htmlTwoColumnGrid
-                                    [ style "align-self" "center"
-                                    , style "color" "white"
-                                    ]
-                                    [ Product farm.perTurn farm.product
-                                    , Timeout farm.timeout
-                                    ]
-                                ]
-
-                            OccupiedPlanet (FactoryPlanet factory) ->
-                                if factory.efficiency == 0 then
-                                    [ Html.p
-                                        [ style "display" "block"
-                                        , style "color" "white"
-                                        , style "text-align" "center"
-                                        , style "font-weight" "bold"
-                                        ]
-                                        [ Html.text "This factory is gone" ]
-                                    ]
-
-                                else
-                                    [ Html.p
-                                        [ style "display" "block"
-                                        , style "color" "white"
-                                        , style "text-align" "center"
-                                        , style "font-weight" "bold"
-                                        ]
-                                        [ case factory.order of
-                                            Just _ ->
-                                                Html.text ("The planet " ++ planet.name ++ " is producing")
-
-                                            Nothing ->
-                                                Html.text ("The planet " ++ planet.name ++ " can produce")
-                                        ]
-                                    , selectionRow []
-                                        (List.filterMap (viewFactoryOption factory) Product.all)
-                                        |> Html.map (SetFactoryProduction planetId)
-                                    ]
-
-                            OccupiedPlanet (DepositPlanet deposit) ->
-                                [ Html.p
-                                    [ style "display" "block"
-                                    , style "color" "white"
-                                    , style "text-align" "center"
-                                    , style "font-weight" "bold"
-                                    ]
-                                    [ if List.isEmpty deposit.content then
-                                        Html.text ("The planet " ++ planet.name ++ " is empty")
-
-                                      else
-                                        Html.text ("The planet " ++ planet.name ++ " contains")
-                                    ]
-                                , htmlTwoColumnGrid []
-                                    (List.map (\item -> Product item.quantity item.product) deposit.content)
-                                ]
-                        )
+                    bottomBox [] (viewSelectedPlanet planetId planet)
 
         SelectedLink _ ->
             bottomBox []
@@ -225,6 +146,88 @@ viewPlaying model =
                     ]
                 ]
     ]
+
+
+viewSelectedPlanet : Id PlanetId -> Planet -> List (Html PlayingMsg)
+viewSelectedPlanet planetId planet =
+    case planet.kind of
+        VirginPlanet options ->
+            [ Html.p
+                [ style "display" "block"
+                , style "color" "white"
+                , style "text-align" "center"
+                , style "font-weight" "bold"
+                ]
+                [ Html.text ("Colonize planet " ++ planet.name)
+                ]
+            , selectionRow []
+                (List.map (viewVirginPlanetOption planetId) options)
+            ]
+
+        OccupiedPlanet (FarmPlanet farm) ->
+            [ Html.p
+                [ style "display" "block"
+                , style "color" "white"
+                , style "text-align" "center"
+                , style "font-weight" "bold"
+                ]
+                [ Html.text ("The planet " ++ planet.name ++ " is producing")
+                ]
+            , htmlTwoColumnGrid
+                [ style "align-self" "center"
+                , style "color" "white"
+                ]
+                [ Product farm.perTurn farm.product
+                , Timeout farm.timeout
+                ]
+            ]
+
+        OccupiedPlanet (FactoryPlanet factory) ->
+            if factory.efficiency == 0 then
+                [ Html.p
+                    [ style "display" "block"
+                    , style "color" "white"
+                    , style "text-align" "center"
+                    , style "font-weight" "bold"
+                    ]
+                    [ Html.text "This factory is broken" ]
+                ]
+
+            else
+                [ Html.p
+                    [ style "display" "block"
+                    , style "color" "white"
+                    , style "text-align" "center"
+                    , style "font-weight" "bold"
+                    ]
+                    [ case factory.order of
+                        Just _ ->
+                            Html.text ("The planet " ++ planet.name ++ " is producing")
+
+                        Nothing ->
+                            Html.text ("The planet " ++ planet.name ++ " can produce")
+                    ]
+                , selectionRow []
+                    (List.filterMap (viewFactoryOption factory) Product.all)
+                    |> Html.map (SetFactoryProduction planetId)
+                ]
+
+        OccupiedPlanet (DepositPlanet deposit) ->
+            [ Html.p
+                [ style "display" "block"
+                , style "color" "white"
+                , style "text-align" "center"
+                , style "font-weight" "bold"
+                ]
+                [ if List.isEmpty deposit.content then
+                    Html.text ("The planet " ++ planet.name ++ " is empty")
+
+                  else
+                    Html.text ("The planet " ++ planet.name ++ " contains")
+                ]
+            , htmlTwoColumnGrid []
+                (List.map (\item -> Product item.quantity item.product) deposit.content)
+            ]
 
 
 viewFactoryOption : FactoryData -> Product -> Maybe (Html (Maybe Product))

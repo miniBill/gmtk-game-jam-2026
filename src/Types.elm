@@ -29,6 +29,7 @@ type alias PlayingModel =
     , links : IdDict LinkId Link
     , selected : Selected
     , earthNeed : { product : Product, quantity : Int, timeout : Int }
+    , highlightPlanet : Maybe PlanetId
     }
 
 
