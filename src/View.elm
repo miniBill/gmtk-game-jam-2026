@@ -18,7 +18,7 @@ import Svg.Attributes
 import Svg.Events
 import SvgAttributes
 import Theme
-import Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FactoryData, Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -152,17 +152,34 @@ viewPlaying model =
                                 ]
 
                             OccupiedPlanet (FactoryPlanet factory) ->
-                                [ Html.p
-                                    [ style "display" "block"
-                                    , style "color" "white"
-                                    , style "text-align" "center"
-                                    , style "font-weight" "bold"
+                                if factory.efficiency == 0 then
+                                    [ Html.p
+                                        [ style "display" "block"
+                                        , style "color" "white"
+                                        , style "text-align" "center"
+                                        , style "font-weight" "bold"
+                                        ]
+                                        [ Html.text "This factory is gone" ]
                                     ]
-                                    [ Html.text ("The planet " ++ planet.name ++ " is producing")
+
+                                else
+                                    [ Html.p
+                                        [ style "display" "block"
+                                        , style "color" "white"
+                                        , style "text-align" "center"
+                                        , style "font-weight" "bold"
+                                        ]
+                                        [ case factory.order of
+                                            Just _ ->
+                                                Html.text ("The planet " ++ planet.name ++ " is producing")
+
+                                            Nothing ->
+                                                Html.text ("The planet " ++ planet.name ++ " can produce")
+                                        ]
+                                    , selectionRow []
+                                        (List.filterMap (viewFactoryOption factory) Product.all)
+                                        |> Html.map (SetFactoryProduction planetId)
                                     ]
-                                , selectionRow []
-                                    (List.filterMap (viewFactoryOption factory.order) Product.all)
-                                ]
 
                             OccupiedPlanet (DepositPlanet deposit) ->
                                 [ Html.p [] []
@@ -198,14 +215,42 @@ viewPlaying model =
     ]
 
 
-viewFactoryOption : Maybe Product -> Product -> Maybe (Html msg)
-viewFactoryOption selected product =
-    case Product.toRecipe product of
-        Nothing ->
-            Nothing
+viewFactoryOption : FactoryData -> Product -> Maybe (Html (Maybe Product))
+viewFactoryOption factory product =
+    Product.toRecipe product
+        |> Maybe.map
+            (\recipe ->
+                let
+                    selected : Bool
+                    selected =
+                        factory.order == Just product
+                in
+                Html.div
+                    [ if selected then
+                        style "background" "#f44"
 
-        Just recipe ->
-            Just (Html.text "TODO")
+                      else
+                        style "background" "gray"
+                    , style "padding" "8px"
+                    , Html.Attributes.class "on-hover-highlight"
+                    , if selected then
+                        Html.Events.onClick Nothing
+
+                      else
+                        Html.Events.onClick (Just product)
+                    , style "cursor" "pointer"
+                    ]
+                    [ htmlTwoColumnGrid []
+                        [ Product factory.efficiency product
+                        ]
+                    , Html.text "from"
+                    , htmlTwoColumnGrid []
+                        (List.map
+                            (\ingredient -> Product (factory.efficiency * ingredient.quantity) ingredient.product)
+                            recipe
+                        )
+                    ]
+            )
 
 
 playingFieldAnchor : String
@@ -594,8 +639,15 @@ viewPlanet selected id planet =
                         { x = cx
                         , y = cy
                         }
-                        [ Efficiency factory.efficiency
-                        ]
+                        (case factory.order of
+                            Just product ->
+                                [ Product factory.efficiency product
+                                ]
+
+                            Nothing ->
+                                [ Efficiency factory.efficiency
+                                ]
+                        )
 
                 OccupiedPlanet (DepositPlanet deposit) ->
                     svgTwoColumnGrid { x = cx, y = cy }

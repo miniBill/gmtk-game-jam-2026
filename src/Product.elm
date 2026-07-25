@@ -84,7 +84,7 @@ toString product =
             "Milk"
 
 
-toRecipe : Product -> Maybe (List { product : Product, quantity : number })
+toRecipe : Product -> Maybe (List { product : Product, quantity : Int })
 toRecipe product =
     case product of
         Grain ->

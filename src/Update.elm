@@ -13,7 +13,7 @@ import Random
 import String.Extra
 import Task
 import Time
-import Types exposing (Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FarmData, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 minimumPlanetDistance : Length
@@ -76,10 +76,10 @@ update audioData msg model =
             )
 
         AudioLoadResult (Err e) ->
-            let
-                _ =
-                    Debug.log "AudioLoadResult (Err e)" e
-            in
+            -- let
+            --     _ =
+            --         Debug.log "AudioLoadResult (Err e)" e
+            -- in
             ( model, Cmd.none, Audio.cmdNone )
 
         AudioLoadResult (Ok sound) ->
@@ -154,6 +154,27 @@ updatePlaying msg model =
 
         EndTurn ->
             ( model |> updatePlanets, Cmd.none )
+
+        SetFactoryProduction id order ->
+            ( { model
+                | planets =
+                    IdDict.updateIfExists
+                        id
+                        (\planet ->
+                            case planet.kind of
+                                OccupiedPlanet (FactoryPlanet factory) ->
+                                    { planet
+                                        | kind =
+                                            OccupiedPlanet (FactoryPlanet { factory | order = order })
+                                    }
+
+                                _ ->
+                                    planet
+                        )
+                        model.planets
+              }
+            , Cmd.none
+            )
 
 
 updatePlanets : PlayingModel -> PlayingModel
@@ -310,12 +331,7 @@ factoryGenerator =
 
 farmGenerator :
     Int
-    ->
-        List
-            { product : Product
-            , timeout : Int
-            , perTurn : Int
-            }
+    -> List FarmData
     -> Random.Generator (List OccupiedPlanet)
 farmGenerator count acc =
     if count <= 0 then

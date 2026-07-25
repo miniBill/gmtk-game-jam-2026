@@ -1,4 +1,4 @@
-module Types exposing (Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
+module Types exposing (DepositData, FactoryData, FarmData, Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
 import Id exposing (Id, LinkId, PlanetId)
@@ -59,20 +59,29 @@ type PlanetKind
 
 
 type OccupiedPlanet
-    = FarmPlanet
-        { product : Product
-        , timeout : Int
-        , perTurn : Int
-        }
-    | FactoryPlanet
-        { efficiency : Int
-        , order : Maybe Product
-        , deposit : List { product : Product, quantity : Int }
-        }
-    | DepositPlanet
-        { capacity : Int
-        , content : List { product : Product, quantity : Int }
-        }
+    = FarmPlanet FarmData
+    | FactoryPlanet FactoryData
+    | DepositPlanet DepositData
+
+
+type alias FarmData =
+    { product : Product
+    , timeout : Int
+    , perTurn : Int
+    }
+
+
+type alias FactoryData =
+    { efficiency : Int
+    , order : Maybe Product
+    , deposit : List { product : Product, quantity : Int }
+    }
+
+
+type alias DepositData =
+    { capacity : Int
+    , content : List { product : Product, quantity : Int }
+    }
 
 
 type alias Recipe =
@@ -97,3 +106,4 @@ type PlayingMsg
     | SelectEarth
     | OccupyPlanet (Id PlanetId) OccupiedPlanet
     | EndTurn
+    | SetFactoryProduction (Id PlanetId) (Maybe Product)
