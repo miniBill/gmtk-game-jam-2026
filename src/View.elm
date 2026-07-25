@@ -96,6 +96,7 @@ viewPlaying model =
             ]
             [ Svg.defs []
                 [ selectionGradient.def
+                , linkGradient.def
                 ]
             , Svg.g [ Svg.Attributes.id "background" ] background
             , Svg.g [ Svg.Attributes.id "links" ]
@@ -178,9 +179,35 @@ selectionGradient =
     }
 
 
+linkGradient : { ref : String, def : Svg msg }
+linkGradient =
+    let
+        id : String
+        id =
+            "link-gradient"
+    in
+    { ref = "url(#" ++ id ++ ")"
+    , def =
+        Svg.linearGradient
+            [ Svg.Attributes.id id
+            ]
+            [ Svg.stop
+                [ Svg.Attributes.offset "0%"
+                , Svg.Attributes.stopColor "red"
+                ]
+                []
+            , Svg.stop
+                [ Svg.Attributes.offset "100%"
+                , Svg.Attributes.stopColor "blue"
+                ]
+                []
+            ]
+    }
+
+
 maximumLinkLength : Length
 maximumLinkLength =
-    Length.lightYears 1.5
+    Length.lightYears 2
 
 
 viewLinkPossibilities : PlayingModel -> Id PlanetId -> Planet -> List (Html PlayingMsg)
@@ -208,7 +235,12 @@ viewLinkPossibilities model from fromPlanet =
         children =
             IdDict.fold
                 (\to toPlanet acc ->
-                    if Point2d.distanceFrom fromPlanet.position toPlanet.position |> Quantity.lessThan maximumLinkLength then
+                    if
+                        (Point2d.distanceFrom fromPlanet.position toPlanet.position
+                            |> Quantity.lessThan maximumLinkLength
+                        )
+                            && (to /= from)
+                    then
                         case toPlanet.kind of
                             VirginPlanet _ ->
                                 acc
@@ -899,26 +931,31 @@ viewLinks model =
 
 
 viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> Maybe (Svg PlayingMsg)
-viewLink model from fromPlanet to _ =
-    IdDict.get to model.planets
-        |> Maybe.map
-            (\toPlanet ->
-                let
-                    ( x1, y1 ) =
-                        Point2d.coordinates fromPlanet.position
+viewLink model from fromPlanet to link =
+    if Product.Dict.all (\v -> v <= 0) link then
+        Nothing
 
-                    ( x2, y2 ) =
-                        Point2d.coordinates toPlanet.position
-                in
-                Svg.line
-                    [ SvgAttributes.x1 (Length.inLightYears x1)
-                    , SvgAttributes.y1 (Length.inLightYears y1)
-                    , SvgAttributes.x2 (Length.inLightYears x2)
-                    , SvgAttributes.y2 (Length.inLightYears y2)
-                    , Svg.Events.onClick (SelectPlanet from)
-                    , Svg.Attributes.stroke "white"
-                    , Svg.Events.onMouseOver (HighlightLink from to)
-                    , Svg.Events.onMouseOut HighlightNone
-                    ]
-                    []
-            )
+    else
+        IdDict.get to model.planets
+            |> Maybe.map
+                (\toPlanet ->
+                    let
+                        ( x1, y1 ) =
+                            Point2d.coordinates fromPlanet.position
+
+                        ( x2, y2 ) =
+                            Point2d.coordinates toPlanet.position
+                    in
+                    Svg.line
+                        [ SvgAttributes.x1 (Length.inLightYears x1)
+                        , SvgAttributes.y1 (Length.inLightYears y1)
+                        , SvgAttributes.x2 (Length.inLightYears x2)
+                        , SvgAttributes.y2 (Length.inLightYears y2)
+                        , Svg.Events.onClick (SelectPlanet from)
+                        , SvgAttributes.strokeWidth 0.01
+                        , Svg.Attributes.stroke linkGradient.ref
+                        , Svg.Events.onMouseOver (HighlightLink from to)
+                        , Svg.Events.onMouseOut HighlightNone
+                        ]
+                        []
+                )

@@ -1,4 +1,4 @@
-module Product.Dict exposing (ProductDict, empty, get, insert)
+module Product.Dict exposing (ProductDict, all, empty, get, insert)
 
 import FastDict as Dict exposing (Dict)
 import Product exposing (Product)
@@ -21,3 +21,8 @@ get key (ProductDict dict) =
 insert : Product -> v -> ProductDict v -> ProductDict v
 insert product v (ProductDict dict) =
     ProductDict (Dict.insert (Product.toString product) v dict)
+
+
+all : (v -> Bool) -> ProductDict v -> Bool
+all f (ProductDict dict) =
+    Dict.foldl (\_ v acc -> acc && f v) True dict
