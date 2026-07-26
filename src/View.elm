@@ -690,7 +690,7 @@ viewFactoryOption factory product =
             Html.Events.onClick (Just product)
         , style "cursor" "pointer"
         ]
-        [ Product_ product
+        [ Product_ 1 product
         ]
 
 
@@ -712,12 +712,12 @@ viewRecipe product =
         , style "cursor" "pointer"
         ]
         [ htmlTwoColumnGrid []
-            [ Product 1 product
+            [ Product_ 1 product
             ]
         , Html.text "from"
         , htmlTwoColumnGrid []
             (List.map
-                (\ingredient -> Food ingredient.quantity ingredient.food)
+                (\ingredient -> Food_ ingredient.quantity ingredient.food)
                 recipe
             )
         ]
@@ -809,8 +809,9 @@ htmlTwoColumnGrid attrs children =
 type GridRow
     = Ingredient Int Ingredient
     | Product Int Product
-    | Product_ Product
+    | Product_ Int Product
     | Food Int Food
+    | Food_ Int Food
     | Countdown Int
     | Efficiency Int
     | Capacity (Maybe Int)
@@ -850,8 +851,35 @@ gridRowToTuple gridRow =
             )
                 |> Just
 
-        Product_ product ->
+        Food_ 1 food ->
             ( ""
+            , { icon = Food.toIcon food
+              , title = Food.toString food
+              , colors = Food.toColors food
+              }
+            )
+                |> Just
+
+        Food_ quantity food ->
+            ( String.fromInt quantity
+            , { icon = Food.toIcon food
+              , title = Food.toString food
+              , colors = Food.toColors food
+              }
+            )
+                |> Just
+
+        Product_ 1 product ->
+            ( ""
+            , { icon = Food.productToIcon product
+              , title = Food.productToString product
+              , colors = Food.productToColors product
+              }
+            )
+                |> Just
+
+        Product_ quantity product ->
+            ( String.fromInt quantity
             , { icon = Food.productToIcon product
               , title = Food.productToString product
               , colors = Food.productToColors product
