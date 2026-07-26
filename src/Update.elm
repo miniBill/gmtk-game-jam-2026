@@ -148,7 +148,6 @@ initPlayingModel gameMode initialSeed =
     , svgContainerSize = ( Pixels.pixels 200, Pixels.pixels 200 )
     , center = Point2d.origin
     , zoom = Quantity.rate Length.lightYear (Pixels.pixels 200)
-    , mousePosition = Point2d.origin
     }
 
 
@@ -260,12 +259,6 @@ updatePlaying msg model =
                 | zoom = newZoom
                 , center = newCenter
               }
-                |> Playing
-            , Cmd.none
-            )
-
-        MouseMove position ->
-            ( { model | mousePosition = position }
                 |> Playing
             , Cmd.none
             )

@@ -87,9 +87,6 @@ viewPlaying model =
         ( containerWidth, containerHeight ) =
             model.svgContainerSize
 
-        ( mouseX, mouseY ) =
-            Point2d.coordinates model.mousePosition
-
         maxWidth : Length
         maxWidth =
             Quantity.at model.zoom containerWidth
@@ -123,9 +120,32 @@ viewPlaying model =
         , style "max-height" "100dvh"
         , Svg.Attributes.viewBox viewBox
         , Svg.Events.on "wheel"
-            (Json.Decode.map
-                (\deltaY ->
+            (Json.Decode.map3
+                (\deltaY offsetX offsetY ->
                     let
+                        mousePosition =
+                            Point2d.xy
+                                (minX
+                                    |> Quantity.plus
+                                        (Quantity.multiplyBy
+                                            (Quantity.ratio
+                                                (Pixels.pixels offsetX)
+                                                containerWidth
+                                            )
+                                            maxWidth
+                                        )
+                                )
+                                (minY
+                                    |> Quantity.plus
+                                        (Quantity.multiplyBy
+                                            (Quantity.ratio
+                                                (Pixels.pixels offsetY)
+                                                containerHeight
+                                            )
+                                            maxHeight
+                                        )
+                                )
+
                         newZoom : Quantity Float (Quantity.Rate Meters Pixels)
                         newZoom =
                             Quantity.multiplyBy (1.003 ^ deltaY) model.zoom
@@ -137,28 +157,6 @@ viewPlaying model =
                     MouseWheel newZoom newCenter
                 )
                 (Json.Decode.field "deltaY" Json.Decode.float)
-            )
-        , Svg.Events.on "mousemove"
-            (Json.Decode.map2
-                (\x y ->
-                    MouseMove
-                        (Point2d.xy
-                            (minX
-                                |> Quantity.plus
-                                    (Quantity.multiplyBy
-                                        (Quantity.ratio (Pixels.pixels x) containerWidth)
-                                        maxWidth
-                                    )
-                            )
-                            (minY
-                                |> Quantity.plus
-                                    (Quantity.multiplyBy
-                                        (Quantity.ratio (Pixels.pixels y) containerHeight)
-                                        maxHeight
-                                    )
-                            )
-                        )
-                )
                 (Json.Decode.field "offsetX" Json.Decode.float)
                 (Json.Decode.field "offsetY" Json.Decode.float)
             )

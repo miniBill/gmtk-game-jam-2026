@@ -38,7 +38,6 @@ type alias PlayingModel =
     , svgContainerSize : ( Quantity Float Pixels, Quantity Float Pixels )
     , center : Point2d Meters ()
     , zoom : Quantity Float (Quantity.Rate Meters Pixels)
-    , mousePosition : Point2d Meters ()
     }
 
 
@@ -139,7 +138,6 @@ type PlayingMsg
     | HighlightNone
     | SetLink (Id PlanetId) (Id PlanetId) Food Int
     | MouseWheel (Quantity Float (Quantity.Rate Meters Pixels)) (Point2d Meters ())
-    | MouseMove (Point2d Meters ())
 
 
 type GamePhase
