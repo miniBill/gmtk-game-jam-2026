@@ -14,6 +14,7 @@ import IdDict exposing (IdDict)
 import Json.Decode
 import Length exposing (Length, Meters)
 import List.Extra
+import Maybe.Extra
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
 import Quantity exposing (Quantity)
@@ -306,6 +307,9 @@ calculateZoom model deltaY offsetX offsetY =
 
         newCenter : Point2d Meters ()
         newCenter =
+            -- (mouse - oldCenter) * oldZoon = (mouse - newCenter) * newZoom
+            -- (oldCenter - mouse) * oldZoon = (newCenter - mouse) * newZoom
+            -- (newCenter - mouse) = (oldCenter - mouse) * oldZoon / newZoon
             model.center
     in
     MouseWheel newZoom newCenter
@@ -1096,14 +1100,13 @@ svgTwoColumnsGrid :
     -> Svg msg
 svgTwoColumnsGrid attrs config rows =
     rows
-        |> List.indexedMap gridRowToSvg
+        |> List.indexedMap (gridRowToSvg attrs)
         |> Svg.g
-            (SvgAttributes.transformTranslate
+            [ SvgAttributes.transformTranslate
                 { x = Length.inLightYears config.x
                 , y = Length.inLightYears config.y
                 }
-                :: attrs
-            )
+            ]
 
 
 svgThreeColumnsGrid :
@@ -1153,8 +1156,8 @@ gridIngredientsRowToSvg y row =
         |> Svg.g []
 
 
-gridRowToSvg : Int -> GridRow -> Svg msg
-gridRowToSvg i row =
+gridRowToSvg : List (Svg.Attribute msg) -> Int -> GridRow -> Svg msg
+gridRowToSvg attrs i row =
     case gridRowToTuple row of
         Just ( text, rowIcon ) ->
             Svg.g
@@ -1163,30 +1166,32 @@ gridRowToSvg i row =
                     , y = (toFloat i + 1.1) * Theme.planetRadius * 1.3
                     }
                 ]
-                [ Svg.g
-                    [ SvgAttributes.transformTranslate
-                        { x = 0
-                        , y = Theme.planetRadius * 0.1
-                        }
-                    ]
-                    [ svgRadialBackground rowIcon.colors
-                    , Svg.image
-                        [ Svg.Attributes.xlinkHref rowIcon.icon
-                        , SvgAttributes.x (Theme.planetRadius * 0.1)
-                        , SvgAttributes.y (Theme.planetRadius * 0.1)
-                        , SvgAttributes.width (Theme.planetRadius * 0.8)
-                        , SvgAttributes.height (Theme.planetRadius * 0.8)
+                [ Svg.g attrs
+                    [ Svg.g
+                        [ SvgAttributes.transformTranslate
+                            { x = 0
+                            , y = Theme.planetRadius * 0.1
+                            }
                         ]
-                        []
+                        [ svgRadialBackground rowIcon.colors
+                        , Svg.image
+                            [ Svg.Attributes.xlinkHref rowIcon.icon
+                            , SvgAttributes.x (Theme.planetRadius * 0.1)
+                            , SvgAttributes.y (Theme.planetRadius * 0.1)
+                            , SvgAttributes.width (Theme.planetRadius * 0.8)
+                            , SvgAttributes.height (Theme.planetRadius * 0.8)
+                            ]
+                            []
+                        ]
+                    , Svg.text_
+                        [ SvgAttributes.x (-Theme.planetRadius * 0.25)
+                        , Svg.Attributes.dominantBaseline "hanging"
+                        , Svg.Attributes.textAnchor "end"
+                        , SvgAttributes.fontSize (1.1 * Theme.planetRadius)
+                        , Svg.Attributes.fill "white"
+                        ]
+                        [ Svg.text text ]
                     ]
-                , Svg.text_
-                    [ SvgAttributes.x (-Theme.planetRadius * 0.25)
-                    , Svg.Attributes.dominantBaseline "hanging"
-                    , Svg.Attributes.textAnchor "end"
-                    , SvgAttributes.fontSize (1.1 * Theme.planetRadius)
-                    , Svg.Attributes.fill "white"
-                    ]
-                    [ Svg.text text ]
                 ]
 
         Nothing ->
@@ -1444,14 +1449,22 @@ viewPlanet { selected, highlighted } id planet =
                     ]
 
                 OccupiedPlanet (DepositPlanet deposit) ->
+                    let
+                        foodLines =
+                            List.map
+                                (\( product, quantity ) -> Food quantity product)
+                                (Food.Dict.toList deposit.content)
+                    in
                     [ svgTwoColumnsGrid []
                         { x = cx
                         , y = cy
                         }
-                        (Capacity deposit.capacity
-                            :: List.map
-                                (\( product, quantity ) -> Food quantity product)
-                                (Food.Dict.toList deposit.content)
+                        (if Maybe.Extra.isNothing deposit.capacity then
+                            foodLines
+
+                         else
+                            Capacity deposit.capacity
+                                :: foodLines
                         )
                     ]
     in
@@ -1545,9 +1558,9 @@ viewLink model from fromPlanet to link =
                             else
                                 Just (Food quantity food)
                         )
-                    |> svgTwoColumnsGrid []
+                    |> svgTwoColumnsGrid [ Svg.Attributes.transform "scale(0.5, 0.5)" ]
                         { x = avg x1 x2
-                        , y = avg y1 y2
+                        , y = avg y1 y2 |> Quantity.minus (Length.lightYears 0.2)
                         }
                 ]
 
