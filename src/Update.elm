@@ -21,7 +21,7 @@ import View
 
 init : () -> ( Model, Cmd Msg, AudioCmd Msg )
 init () =
-    ( { page = Menu ""
+    ( { page = Menu "" False
       , sound = Nothing
       }
     , Cmd.none
@@ -34,8 +34,16 @@ update _ msg model =
     case {- Debug.log "msg" -} msg of
         SetSeed seed ->
             case model.page of
-                Menu _ ->
-                    ( { model | page = Menu seed }, Cmd.none, Audio.cmdNone )
+                Menu _ vegetarian ->
+                    ( { model | page = Menu seed vegetarian }, Cmd.none, Audio.cmdNone )
+
+                _ ->
+                    ( model, Cmd.none, Audio.cmdNone )
+
+        SetVegetarian vegetarian ->
+            case model.page of
+                Menu seed _ ->
+                    ( { model | page = Menu seed vegetarian }, Cmd.none, Audio.cmdNone )
 
                 _ ->
                     ( model, Cmd.none, Audio.cmdNone )
@@ -54,13 +62,13 @@ update _ msg model =
                     , Audio.cmdNone
                     )
 
-        Play gameMode ->
+        Play gameMode vegetarian ->
             ( model
             , let
                 setSeed : Maybe Int
                 setSeed =
                     case model.page of
-                        Menu seed ->
+                        Menu seed _ ->
                             String.toInt seed
 
                         _ ->
@@ -69,18 +77,18 @@ update _ msg model =
               case setSeed of
                 Nothing ->
                     Random.int 0 Random.maxInt
-                        |> Random.generate (InitialSeed gameMode)
+                        |> Random.generate (InitialSeed gameMode vegetarian)
 
                 Just seed ->
                     Random.constant seed
-                        |> Random.generate (InitialSeed gameMode)
+                        |> Random.generate (InitialSeed gameMode vegetarian)
             , Audio.cmdNone
             )
 
-        InitialSeed gameMode initialSeed ->
+        InitialSeed gameMode vegetarian initialSeed ->
             ( { model
                 | page =
-                    initPlayingModel gameMode initialSeed
+                    initPlayingModel gameMode vegetarian initialSeed
                         |> Turn.addNewPlanets
                         |> Playing
               }
@@ -103,7 +111,7 @@ update _ msg model =
 
         PlayingMsg playingMsg ->
             case model.page of
-                Menu _ ->
+                Menu _ _ ->
                     ( model, Cmd.none, Audio.cmdNone )
 
                 Playing playing ->
@@ -131,7 +139,7 @@ update _ msg model =
 
         GotSvgContainerSize (Ok { viewport }) ->
             case model.page of
-                Menu _ ->
+                Menu _ _ ->
                     ( model, Cmd.none, Audio.cmdNone )
 
                 Playing playingModel ->
@@ -160,14 +168,15 @@ getSvgContainerSize =
         |> Task.attempt GotSvgContainerSize
 
 
-initPlayingModel : GameMode -> Int -> PlayingModel
-initPlayingModel gameMode initialSeed =
+initPlayingModel : GameMode -> Bool -> Int -> PlayingModel
+initPlayingModel gameMode vegetarian initialSeed =
     let
         ( initialEarth, seed ) =
-            Random.step initialEarthGenerator (Random.initialSeed initialSeed)
+            Random.step (initialEarthGenerator vegetarian) (Random.initialSeed initialSeed)
     in
     { initialSeed = initialSeed
     , currentSeed = seed
+    , vegetarian = vegetarian
     , planets = IdDict.empty |> IdDict.insertNew initialEarth
     , selected = SelectedNone
     , highlighted = HighlightedNone
@@ -181,8 +190,8 @@ initPlayingModel gameMode initialSeed =
     }
 
 
-initialEarthGenerator : Random.Generator Planet
-initialEarthGenerator =
+initialEarthGenerator : Bool -> Random.Generator Planet
+initialEarthGenerator vegetarian =
     Random.map
         (\product ->
             { name = "Terra"
@@ -199,7 +208,7 @@ initialEarthGenerator =
                     }
             }
         )
-        (Turn.randomColonyRequest EarlyGame)
+        (Turn.randomColonyRequest EarlyGame vegetarian)
 
 
 updatePlaying : PlayingMsg -> PlayingModel -> ( Page, Cmd PlayingMsg )

@@ -36,6 +36,7 @@ run model =
     in
     if hasLost then
         { initialSeed = newModel.initialSeed
+        , vegetarian = newModel.vegetarian
         , planets = newModel.planets
         , selected = newModel.selected
         , highlighted = newModel.highlighted
@@ -375,7 +376,7 @@ updateCountdown model planet =
                         }
                     )
                     (Random.int 1 model.rings)
-                    (randomColonyRequest (Types.gamePhase model))
+                    (randomColonyRequest (Types.gamePhase model) model.vegetarian)
                     |> PlanetScored colony.countdown
 
             else if colony.countdown <= 1 then
@@ -403,12 +404,12 @@ updateCountdown model planet =
             PlanetUnchanged
 
 
-randomColonyRequest : GamePhase -> Random.Generator Food
-randomColonyRequest gamePhase =
+randomColonyRequest : GamePhase -> Bool -> Random.Generator Food
+randomColonyRequest gamePhase vegetarian =
     case gamePhase of
         EarlyGame ->
             case
-                Food.allIngredients
+                Food.allIngredients vegetarian
                     |> List.Extra.removeWhen
                         (\ingredient ->
                             colonyNeverAsks (Food.Ingredient ingredient)
@@ -423,7 +424,7 @@ randomColonyRequest gamePhase =
 
         MidGame ->
             case
-                Food.all
+                Food.all vegetarian
                     |> List.Extra.removeWhen
                         (\food ->
                             colonyNeverAsks food
@@ -438,7 +439,7 @@ randomColonyRequest gamePhase =
 
         LateGame ->
             case
-                Food.all
+                Food.all vegetarian
                     |> List.Extra.removeWhen colonyNeverAsks
             of
                 [] ->
@@ -512,7 +513,7 @@ addNewPlanets model =
         in
         List.foldl
             (\_ m ->
-                addPlanet model.gameMode 100 maximumDistanceSeen m
+                addPlanet model.gameMode model.vegetarian 100 maximumDistanceSeen m
             )
             { model | rings = model.rings + 1 }
             (List.range 1 toAdd)
@@ -521,8 +522,8 @@ addNewPlanets model =
         model
 
 
-addPlanet : GameMode -> Float -> Length -> PlayingModel -> PlayingModel
-addPlanet mode budget fromDistance model =
+addPlanet : GameMode -> Bool -> Float -> Length -> PlayingModel -> PlayingModel
+addPlanet mode vegetarian budget fromDistance model =
     let
         ( planet, nextSeed ) =
             Random.step planetGenerator model.currentSeed
@@ -575,7 +576,7 @@ addPlanet mode budget fromDistance model =
                     (farmOptions ++ [ factoryOption, depositOption ])
                         |> VirginPlanet
                 )
-                (farmGenerator (Types.gamePhase model) 6 [])
+                (farmGenerator (Types.gamePhase model) vegetarian 6 [])
                 factoryGenerator
                 (depositGenerator mode)
     in
@@ -590,7 +591,7 @@ addPlanet mode budget fromDistance model =
             }
 
         RetryGeneration ->
-            addPlanet mode (budget - 5) fromDistance { model | currentSeed = nextSeed }
+            addPlanet mode model.vegetarian (budget - 5) fromDistance { model | currentSeed = nextSeed }
 
 
 depositGenerator : GameMode -> Random.Generator OccupiedPlanet
@@ -641,10 +642,11 @@ factoryGenerator =
 
 farmGenerator :
     GamePhase
+    -> Bool
     -> Int
     -> List FarmData
     -> Random.Generator (List OccupiedPlanet)
-farmGenerator gamePhase count acc =
+farmGenerator gamePhase vegetarian count acc =
     if count <= 0 then
         acc
             |> List.sortBy (\option -> -option.perTurn * option.countdown)
@@ -653,14 +655,14 @@ farmGenerator gamePhase count acc =
 
     else
         Random.map3 FarmData
-            (randomIngredient gamePhase (List.map .ingredient acc))
+            (randomIngredient gamePhase vegetarian (List.map .ingredient acc))
             (Random.int 2 10)
             (Random.int 1 3)
-            |> Random.andThen (\farm -> farmGenerator gamePhase (count - 1) (farm :: acc))
+            |> Random.andThen (\farm -> farmGenerator gamePhase vegetarian (count - 1) (farm :: acc))
 
 
-randomIngredient : GamePhase -> List Ingredient -> Random.Generator Ingredient
-randomIngredient gamePhase existing =
+randomIngredient : GamePhase -> Bool -> List Ingredient -> Random.Generator Ingredient
+randomIngredient gamePhase vegetarian existing =
     case
         List.Extra.removeWhen
             (\ingredient ->
@@ -669,7 +671,7 @@ randomIngredient gamePhase existing =
                             && Food.isDuneIngredient ingredient
                        )
             )
-            Food.allIngredients
+            (Food.allIngredients vegetarian)
     of
         [] ->
             Random.constant Food.Water

@@ -47,15 +47,24 @@ view _ model =
                 children
     in
     case model.page of
-        Menu seed ->
+        Menu seed vegetarian ->
             container
                 [ style "flex-direction" "column" ]
-                [ startGameButtons
+                [ startGameButtons vegetarian
                 , Html.label [ style "color" "white" ]
                     [ Html.text "Game seed (leave blank for random) "
                     , Html.input
                         [ Html.Attributes.value seed
                         , Html.Events.onInput SetSeed
+                        ]
+                        []
+                    ]
+                , Html.label [ style "color" "white" ]
+                    [ Html.text "Vegetarian mode "
+                    , Html.input
+                        [ Html.Attributes.checked vegetarian
+                        , Html.Events.onCheck SetVegetarian
+                        , Html.Attributes.type_ "checkbox"
                         ]
                         []
                     ]
@@ -85,26 +94,35 @@ view _ model =
                     ]
                     [ Html.text ("Seed: " ++ String.fromInt lostModel.initialSeed)
                     ]
-                , startGameButtons
+                , startGameButtons lostModel.vegetarian
+                , Html.label [ style "color" "white" ]
+                    [ Html.text "Vegetarian mode "
+                    , Html.input
+                        [ Html.Attributes.checked lostModel.vegetarian
+                        , Html.Events.onCheck SetVegetarian
+                        , Html.Attributes.type_ "checkbox"
+                        ]
+                        []
+                    ]
                 ]
 
 
-startGameButtons : Html Msg
-startGameButtons =
+startGameButtons : Bool -> Html Msg
+startGameButtons vegetarian =
     Html.div
         [ style "display" "flex"
         , style "gap" "16px"
         ]
         [ Html.button
-            [ Html.Events.onClick (Play Easy)
+            [ Html.Events.onClick (Play Easy vegetarian)
             ]
             [ Html.text "Easy mode" ]
         , Html.button
-            [ Html.Events.onClick (Play Normal)
+            [ Html.Events.onClick (Play Normal vegetarian)
             ]
             [ Html.text "Normal mode" ]
         , Html.button
-            [ Html.Events.onClick (Play Hard)
+            [ Html.Events.onClick (Play Hard vegetarian)
             ]
             [ Html.text "Hard mode" ]
 
@@ -222,7 +240,7 @@ viewPlaying model =
                 Html.text ""
 
             MidGame ->
-                Food.allProducts
+                Food.allProducts model.vegetarian
                     |> List.Extra.removeWhen Food.isDuneProduct
                     |> List.map viewRecipe
                     |> List.sortBy Tuple.first
@@ -236,7 +254,7 @@ viewPlaying model =
                         ]
 
             LateGame ->
-                Food.allProducts
+                Food.allProducts model.vegetarian
                     |> List.map viewRecipe
                     |> List.sortBy Tuple.first
                     |> List.map Tuple.second
@@ -729,7 +747,7 @@ viewSelectedPlanet model planetId planet =
                         Nothing ->
                             Html.text ("The planet " ++ planet.name ++ " can produce")
                     ]
-                , Food.allProducts
+                , Food.allProducts model.vegetarian
                     |> List.Extra.removeWhen
                         (\product ->
                             Food.isDuneProduct product

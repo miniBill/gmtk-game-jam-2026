@@ -78,19 +78,23 @@ type Product
     | Yoghurt
 
 
-all : List Food
-all =
-    List.map Ingredient allIngredients ++ List.map Product allProducts
+all : Bool -> List Food
+all vegetarian =
+    List.map Ingredient (allIngredients vegetarian)
+        ++ List.map Product (allProducts vegetarian)
 
 
-allIngredients : List Ingredient
-allIngredients =
+allIngredients : Bool -> List Ingredient
+allIngredients vegetarian =
     [ Avocado, Blueberry, Chicken, Chocolate, Corn, Cow, Fish, Lettuce, Nut, Pig, Potato, Rice, Sand, Shrimps, Sugar, Tomato, Water, Wheat, Worm ]
+        |> List.filter
+            (\ingredient -> isIngredientVegetarian ingredient || not vegetarian)
 
 
-allProducts : List Product
-allProducts =
+allProducts : Bool -> List Product
+allProducts vegetarian =
     [ Bacon, Bento, Bread, Burger, Butter, Caviar, Cereal, Cheese, ChocolateSpread, Cookie, Croissant, DimSum, Dolmades, Egg, FishFilet, FishAndChips, FriedChicken, FriedRice, HotDog, IceCream, Jam, Macaron, Milk, Omlette, Paella, Pancakes, Pie, Pizza, Popcorn, Pork, Poultry, Quesadilla, RoastBeef, Salad, Samosa, Sandwich, Spice, Soup, Steak, Sushi, Taco, TortillaChips, Yoghurt ]
+        |> List.filter (\product -> isVegetarian (Product product) || not vegetarian)
 
 
 toIcon : Food -> String

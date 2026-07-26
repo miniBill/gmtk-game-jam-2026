@@ -21,7 +21,7 @@ type alias Model =
 
 
 type Page
-    = Menu String
+    = Menu String Bool
     | Playing PlayingModel
     | Lost LostModel
 
@@ -29,6 +29,7 @@ type Page
 type alias PlayingModel =
     { initialSeed : Int
     , currentSeed : Random.Seed
+    , vegetarian : Bool
     , planets : IdDict PlanetId Planet
     , selected : Selected
     , highlighted : Highlighted
@@ -44,6 +45,7 @@ type alias PlayingModel =
 
 type alias LostModel =
     { initialSeed : Int
+    , vegetarian : Bool
     , planets : IdDict PlanetId Planet
     , selected : Selected
     , highlighted : Highlighted
@@ -125,14 +127,15 @@ type alias ColonyData =
 
 type Msg
     = SetSeed String
-    | Play GameMode
+    | Play GameMode Bool
     | TimeResult Audio.Source Time.Posix
-    | InitialSeed GameMode Int
+    | InitialSeed GameMode Bool Int
     | PlaySound
     | AudioLoadResult (Result Audio.LoadError Audio.Source)
     | PlayingMsg PlayingMsg
     | Resized Int Int
     | GotSvgContainerSize (Result Browser.Dom.Error Browser.Dom.Viewport)
+    | SetVegetarian Bool
 
 
 type PlayingMsg
