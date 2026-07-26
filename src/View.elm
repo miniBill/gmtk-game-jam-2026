@@ -785,11 +785,10 @@ viewRecipe product =
             [ Product_ 1 product
             ]
         , Html.text "from"
-        , htmlTwoColumnGrid []
-            (List.map
-                (\ingredient -> Food_ ingredient.quantity ingredient.food)
-                recipe
-            )
+        , recipe
+            |> List.sortBy (\ingredient -> Food.toString ingredient.food)
+            |> List.map (\ingredient -> Food_ ingredient.quantity ingredient.food)
+            |> htmlTwoColumnGrid []
         ]
     )
 
