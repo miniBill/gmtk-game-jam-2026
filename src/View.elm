@@ -28,31 +28,47 @@ import Types exposing (FactoryData, GameMode(..), GamePhase(..), Highlighted(..)
 
 view : AudioData -> Model -> Html Msg
 view _ model =
-    Html.main_
-        [ style "display" "flex"
-        , style "gap" "8px"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        , style "padding" "8px"
-        , style "width" "100vw"
-        , style "height" "100dvh"
-        ]
-        (case model.page of
-            Menu ->
-                [ startGameButtons ]
+    let
+        container : List (Attribute msg) -> List (Html msg) -> Html msg
+        container attrs children =
+            Html.main_
+                ([ style "display" "flex"
+                 , style "gap" "8px"
+                 , style "align-items" "center"
+                 , style "justify-content" "center"
+                 , style "padding" "8px"
+                 , style "width" "100vw"
+                 , style "height" "100dvh"
+                 ]
+                    ++ attrs
+                )
+                children
+    in
+    case model.page of
+        Menu ->
+            container [] [ startGameButtons ]
 
-            Playing playingModel ->
-                viewPlaying playingModel
-                    |> List.map (Html.map PlayingMsg)
+        Playing playingModel ->
+            viewPlaying playingModel
+                |> List.map (Html.map PlayingMsg)
+                |> container []
 
-            Lost lostModel ->
+        Lost lostModel ->
+            container
+                [ style "flex-direction" "column" ]
                 [ Html.p
                     [ style "color" "white"
                     ]
-                    [ Html.text ("Final score: " ++ String.fromInt lostModel.score) ]
+                    [ Html.text
+                        ("Final score: "
+                            ++ String.fromInt lostModel.score
+                            ++ " points in "
+                            ++ String.fromInt lostModel.turns
+                            ++ " turns"
+                        )
+                    ]
                 , startGameButtons
                 ]
-        )
 
 
 startGameButtons : Html Msg
@@ -221,6 +237,10 @@ viewPlaying model =
             [ Html.div
                 [ style "color" "white" ]
                 [ Html.text ("Score: " ++ String.fromInt model.score) ]
+            , Html.div [ style "flex" "1 0" ] []
+            , Html.div
+                [ style "color" "white" ]
+                [ Html.text ("Turns: " ++ String.fromInt model.turns) ]
             , Html.div [ style "flex" "1 0" ] []
             , Html.button [ Html.Events.onClick EndTurn ] [ Html.text "End turn" ]
             ]
@@ -638,13 +658,17 @@ viewSelectedPlanet model planetId planet =
                 ]
                 [ Html.text ("The planet " ++ planet.name ++ " is producing")
                 ]
-            , htmlTwoColumnGrid
-                [ style "align-self" "center"
-                , style "color" "white"
-                ]
-                [ Ingredient farm.perTurn farm.ingredient
-                , Countdown farm.countdown
-                ]
+            , if farm.countdown > 0 then
+                htmlTwoColumnGrid
+                    [ style "align-self" "center"
+                    , style "color" "white"
+                    ]
+                    [ Ingredient farm.perTurn farm.ingredient
+                    , Countdown farm.countdown
+                    ]
+
+              else
+                Html.text ""
             ]
 
         OccupiedPlanet (FactoryPlanet factory) ->

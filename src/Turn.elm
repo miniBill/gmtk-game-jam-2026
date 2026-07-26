@@ -41,6 +41,7 @@ run model =
         , highlighted = newModel.highlighted
         , score = newModel.score
         , gameMode = newModel.gameMode
+        , turns = newModel.turns
         }
             |> Err
 
@@ -340,7 +341,7 @@ updateCountdowns model =
                     , lost
                     )
         )
-        ( model, False )
+        ( { model | turns = model.turns + 1 }, False )
         model.planets
 
 

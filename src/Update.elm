@@ -143,6 +143,7 @@ initPlayingModel gameMode initialSeed =
     , selected = SelectedNone
     , highlighted = HighlightedNone
     , score = 0
+    , turns = 1
     , gameMode = gameMode
     , rings = 1
     , svgContainerSize = ( Pixels.pixels 200, Pixels.pixels 200 )

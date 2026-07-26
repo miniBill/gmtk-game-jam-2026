@@ -33,6 +33,7 @@ type alias PlayingModel =
     , selected : Selected
     , highlighted : Highlighted
     , score : Int
+    , turns : Int
     , gameMode : GameMode
     , rings : Int
     , svgContainerSize : ( Quantity Float Pixels, Quantity Float Pixels )
@@ -47,6 +48,7 @@ type alias LostModel =
     , selected : Selected
     , highlighted : Highlighted
     , score : Int
+    , turns : Int
     , gameMode : GameMode
     }
 
