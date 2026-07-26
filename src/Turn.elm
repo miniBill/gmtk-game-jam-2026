@@ -377,7 +377,10 @@ updateCountdown model planet =
                             case
                                 Food.allIngredients
                                     |> List.Extra.removeWhen
-                                        (\ingredient -> colonyNeverAsks (Food.Ingredient ingredient))
+                                        (\ingredient ->
+                                            colonyNeverAsks (Food.Ingredient ingredient)
+                                                || Food.isDuneIngredient ingredient
+                                        )
                             of
                                 [] ->
                                     Random.constant (Food.Ingredient Food.Water)
@@ -388,7 +391,11 @@ updateCountdown model planet =
                         MidGame ->
                             case
                                 Food.all
-                                    |> List.Extra.removeWhen colonyNeverAsks
+                                    |> List.Extra.removeWhen
+                                        (\food ->
+                                            colonyNeverAsks food
+                                                || Food.isDuneFood food
+                                        )
                             of
                                 [] ->
                                     Random.constant (Food.Ingredient Food.Water)
@@ -561,7 +568,7 @@ addPlanet mode budget fromDistance model =
                     (farmOptions ++ [ factoryOption, depositOption ])
                         |> VirginPlanet
                 )
-                (farmGenerator 6 [])
+                (farmGenerator (Types.gamePhase model) 6 [])
                 factoryGenerator
                 (depositGenerator mode)
     in
@@ -626,10 +633,11 @@ factoryGenerator =
 
 
 farmGenerator :
-    Int
+    GamePhase
+    -> Int
     -> List FarmData
     -> Random.Generator (List OccupiedPlanet)
-farmGenerator count acc =
+farmGenerator gamePhase count acc =
     if count <= 0 then
         acc
             |> List.sortBy (\option -> -option.perTurn * option.countdown)
@@ -638,17 +646,22 @@ farmGenerator count acc =
 
     else
         Random.map3 FarmData
-            (randomIngredient (List.map .ingredient acc))
+            (randomIngredient gamePhase (List.map .ingredient acc))
             (Random.int 2 10)
             (Random.int 1 3)
-            |> Random.andThen (\farm -> farmGenerator (count - 1) (farm :: acc))
+            |> Random.andThen (\farm -> farmGenerator gamePhase (count - 1) (farm :: acc))
 
 
-randomIngredient : List Ingredient -> Random.Generator Ingredient
-randomIngredient existing =
+randomIngredient : GamePhase -> List Ingredient -> Random.Generator Ingredient
+randomIngredient gamePhase existing =
     case
         List.Extra.removeWhen
-            (\product -> List.member product existing)
+            (\ingredient ->
+                List.member ingredient existing
+                    || ((gamePhase /= LateGame)
+                            && Food.isDuneIngredient ingredient
+                       )
+            )
             Food.allIngredients
     of
         [] ->

@@ -1,4 +1,4 @@
-module Food exposing (Food(..), Ingredient(..), Product, Recipe, all, allIngredients, allProducts, ingredientToColor, ingredientToIcon, ingredientToString, isIngredientVegetarian, isVegetarian, productToColors, productToIcon, productToString, toColors, toIcon, toRecipe, toString)
+module Food exposing (Food(..), Ingredient(..), Product, Recipe, all, allIngredients, allProducts, ingredientToColor, ingredientToIcon, ingredientToString, isDuneFood, isDuneIngredient, isDuneProduct, isIngredientVegetarian, isVegetarian, productToColors, productToIcon, productToString, toColors, toIcon, toRecipe, toString)
 
 import Color
 import Color.Oklch as Oklch exposing (Oklch)
@@ -897,3 +897,23 @@ isIngredientVegetarian ingredient =
 
         Worm ->
             True
+
+
+isDuneFood : Food -> Bool
+isDuneFood food =
+    case food of
+        Ingredient ingredient ->
+            isDuneIngredient ingredient
+
+        Product product ->
+            isDuneProduct product
+
+
+isDuneIngredient : Ingredient -> Bool
+isDuneIngredient ingredient =
+    ingredient == Worm || ingredient == Sand
+
+
+isDuneProduct : Product -> Bool
+isDuneProduct product =
+    product == Spice

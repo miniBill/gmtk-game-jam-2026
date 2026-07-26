@@ -217,6 +217,7 @@ viewPlaying model =
 
             MidGame ->
                 Food.allProducts
+                    |> List.Extra.removeWhen Food.isDuneProduct
                     |> List.map viewRecipe
                     |> List.sortBy Tuple.first
                     |> List.map Tuple.second
@@ -623,6 +624,11 @@ viewSelectedPlanet model planetId planet =
                 ]
 
             else
+                let
+                    gamePhase : GamePhase
+                    gamePhase =
+                        Types.gamePhase model
+                in
                 [ Html.p
                     [ style "display" "block"
                     , style "color" "white"
@@ -637,6 +643,11 @@ viewSelectedPlanet model planetId planet =
                             Html.text ("The planet " ++ planet.name ++ " can produce")
                     ]
                 , Food.allProducts
+                    |> List.Extra.removeWhen
+                        (\product ->
+                            Food.isDuneProduct product
+                                && (gamePhase /= LateGame)
+                        )
                     |> List.map (viewFactoryOption factory)
                     |> selectionRow
                         [ style "overflow" "scroll"
