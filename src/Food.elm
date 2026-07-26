@@ -23,49 +23,58 @@ type Ingredient
     | Pig
     | Potato
     | Rice
+    | Sand
     | Shrimps
     | Sugar
     | Tomato
     | Water
     | Wheat
+    | Worm
 
 
 type Product
     = Bacon
+    | Bento
     | Bread
     | Burger
     | Butter
     | Caviar
     | Cereal
     | Cheese
-    | ChineseFriedRice
     | ChocolateSpread
     | Cookie
     | Croissant
     | DimSum
+    | Dolmades
     | Egg
+    | FishFilet
     | FishAndChips
-    | Fries
-    | Guacamole
+    | FriedChicken
+    | FriedRice
     | HotDog
+    | IceCream
     | Jam
+    | Macaron
     | Milk
     | Omlette
     | Paella
-    | PancakeStack
+    | Pancakes
     | Pie
     | Pizza
     | Popcorn
     | Pork
     | Poultry
     | Quesadilla
+    | RoastBeef
     | Salad
     | Samosa
     | Sandwich
+    | Spice
     | Soup
     | Steak
     | Sushi
     | Taco
+    | TortillaChips
     | Yoghurt
 
 
@@ -76,12 +85,12 @@ all =
 
 allIngredients : List Ingredient
 allIngredients =
-    [ Avocado, Blueberry, Chicken, Chocolate, Corn, Cow, Fish, Lettuce, Nut, Pig, Potato, Rice, Shrimps, Sugar, Tomato, Water, Wheat ]
+    [ Avocado, Blueberry, Chicken, Chocolate, Corn, Cow, Fish, Lettuce, Nut, Pig, Potato, Rice, Sand, Shrimps, Sugar, Tomato, Water, Wheat, Worm ]
 
 
 allProducts : List Product
 allProducts =
-    [ Bacon, Bread, Burger, Butter, Caviar, Cereal, Cheese, ChineseFriedRice, ChocolateSpread, Cookie, Croissant, DimSum, Egg, FishAndChips, Fries, Guacamole, HotDog, Jam, Milk, Omlette, Paella, PancakeStack, Pie, Pizza, Popcorn, Pork, Poultry, Quesadilla, Salad, Samosa, Sandwich, Soup, Steak, Sushi, Taco, Yoghurt ]
+    [ Bacon, Bento, Bread, Burger, Butter, Caviar, Cereal, Cheese, ChocolateSpread, Cookie, Croissant, DimSum, Dolmades, Egg, FishFilet, FishAndChips, FriedChicken, FriedRice, HotDog, IceCream, Jam, Macaron, Milk, Omlette, Paella, Pancakes, Pie, Pizza, Popcorn, Pork, Poultry, Quesadilla, RoastBeef, Salad, Samosa, Sandwich, Spice, Soup, Steak, Sushi, Taco, TortillaChips, Yoghurt ]
 
 
 toIcon : Food -> String
@@ -133,6 +142,9 @@ ingredientToIcon ingredient =
         Rice ->
             Theme.iconRice
 
+        Sand ->
+            Theme.iconSand
+
         Shrimps ->
             Theme.iconPrawn
 
@@ -148,11 +160,17 @@ ingredientToIcon ingredient =
         Wheat ->
             Theme.iconWheat
 
+        Worm ->
+            Theme.iconWorm
+
 
 productToIcon : Product -> String
 productToIcon product =
     case product of
         Bacon ->
+            Theme.iconBacon
+
+        Bento ->
             Theme.iconBacon
 
         Bread ->
@@ -173,9 +191,6 @@ productToIcon product =
         Cheese ->
             Theme.iconCheese
 
-        ChineseFriedRice ->
-            Theme.iconChineseFriedRice
-
         ChocolateSpread ->
             Theme.iconChocolateSpread
 
@@ -188,23 +203,35 @@ productToIcon product =
         DimSum ->
             Theme.iconDimSum
 
+        Dolmades ->
+            Theme.iconDolmades
+
         Egg ->
             Theme.iconEggs
 
         FishAndChips ->
             Theme.iconFishAndChips
 
-        Fries ->
-            Theme.iconFries
+        FishFilet ->
+            Theme.iconFishFilet
 
-        Guacamole ->
-            Theme.iconGuacamole
+        FriedChicken ->
+            Theme.iconFriedChicken
+
+        FriedRice ->
+            Theme.iconFriedRice
 
         HotDog ->
-            Theme.iconHotDOg
+            Theme.iconHotDog
+
+        IceCream ->
+            Theme.iconIceCream
 
         Jam ->
             Theme.iconJam
+
+        Macaron ->
+            Theme.iconMacaron
 
         Milk ->
             Theme.iconMilk
@@ -215,8 +242,8 @@ productToIcon product =
         Paella ->
             Theme.iconPaella
 
-        PancakeStack ->
-            Theme.iconPancakeStack
+        Pancakes ->
+            Theme.iconPancakes
 
         Pie ->
             Theme.iconPie
@@ -236,6 +263,9 @@ productToIcon product =
         Quesadilla ->
             Theme.iconQuesadilla
 
+        RoastBeef ->
+            Theme.iconRoastBeef
+
         Salad ->
             Theme.iconSalad
 
@@ -248,6 +278,9 @@ productToIcon product =
         Soup ->
             Theme.iconSoup
 
+        Spice ->
+            Theme.iconSpice
+
         Steak ->
             Theme.iconSteak
 
@@ -256,6 +289,9 @@ productToIcon product =
 
         Taco ->
             Theme.iconTaco
+
+        TortillaChips ->
+            Theme.iconTortillaChips
 
         Yoghurt ->
             Theme.iconYoghurt
@@ -310,6 +346,9 @@ ingredientToString ingredient =
         Rice ->
             "Rice"
 
+        Sand ->
+            "Sand"
+
         Shrimps ->
             "Shrimps"
 
@@ -325,12 +364,18 @@ ingredientToString ingredient =
         Wheat ->
             "Wheat"
 
+        Worm ->
+            "Worm"
+
 
 productToString : Product -> String
 productToString product =
     case product of
         Bacon ->
             "Bacon"
+
+        Bento ->
+            "Bento"
 
         Bread ->
             "Bread"
@@ -350,9 +395,6 @@ productToString product =
         Cheese ->
             "Cheese"
 
-        ChineseFriedRice ->
-            "Fried Rice"
-
         ChocolateSpread ->
             "Chocolate Spread™"
 
@@ -365,23 +407,35 @@ productToString product =
         DimSum ->
             "Dim Sum"
 
+        Dolmades ->
+            "Dolmades"
+
         Egg ->
             "Egg"
 
         FishAndChips ->
             "Fish & Chips"
 
-        Fries ->
-            "Fries"
+        FishFilet ->
+            "Fish Filet"
 
-        Guacamole ->
-            "Guacamole"
+        FriedChicken ->
+            "Fried Chicken"
+
+        FriedRice ->
+            "Fried Rice"
 
         HotDog ->
             "Hot Dog"
 
+        IceCream ->
+            "Ice Cream"
+
         Jam ->
             "Jam"
+
+        Macaron ->
+            "Macaron"
 
         Milk ->
             "Milk"
@@ -392,8 +446,8 @@ productToString product =
         Paella ->
             "Paella"
 
-        PancakeStack ->
-            "Pancake Stack"
+        Pancakes ->
+            "Pancakes"
 
         Pie ->
             "Pie"
@@ -413,6 +467,9 @@ productToString product =
         Quesadilla ->
             "Quesadilla"
 
+        RoastBeef ->
+            "Roast Beef"
+
         Salad ->
             "Salad"
 
@@ -425,6 +482,9 @@ productToString product =
         Soup ->
             "Soup"
 
+        Spice ->
+            "Spice"
+
         Steak ->
             "Steak"
 
@@ -433,6 +493,9 @@ productToString product =
 
         Taco ->
             "Taco"
+
+        TortillaChips ->
+            "TortillaChips"
 
         Yoghurt ->
             "Yoghurt"
@@ -474,10 +537,6 @@ toRecipe product =
             [ { food = Ingredient Cow, quantity = 1 }
             ]
 
-        Fries ->
-            [ { food = Ingredient Potato, quantity = 1 }
-            ]
-
         Salad ->
             [ { food = Ingredient Lettuce, quantity = 1 }
             , { food = Ingredient Tomato, quantity = 1 }
@@ -497,7 +556,7 @@ toRecipe product =
             [ { food = Ingredient Chicken, quantity = 1 }
             ]
 
-        Guacamole ->
+        TortillaChips ->
             [ { food = Ingredient Avocado, quantity = 1 }
             , { food = Ingredient Corn, quantity = 1 }
             ]
@@ -569,7 +628,7 @@ toRecipe product =
             , { food = Ingredient Corn, quantity = 1 }
             ]
 
-        PancakeStack ->
+        Pancakes ->
             [ { food = Product Butter, quantity = 1 }
             , { food = Ingredient Wheat, quantity = 1 }
             , { food = Product Egg, quantity = 1 }
@@ -581,7 +640,7 @@ toRecipe product =
             , { food = Product Poultry, quantity = 1 }
             ]
 
-        ChineseFriedRice ->
+        FriedRice ->
             [ { food = Product Egg, quantity = 1 }
             , { food = Ingredient Rice, quantity = 1 }
             ]
@@ -639,6 +698,47 @@ toRecipe product =
             , { food = Ingredient Nut, quantity = 1 }
             ]
 
+        Bento ->
+            [ { food = Ingredient Rice, quantity = 1 }
+            , { food = Ingredient Shrimps, quantity = 1 }
+            , { food = Ingredient Avocado, quantity = 1 }
+            ]
+
+        Dolmades ->
+            [ { food = Ingredient Rice, quantity = 1 }
+            , { food = Ingredient Lettuce, quantity = 1 }
+            ]
+
+        FriedChicken ->
+            [ { food = Ingredient Chicken, quantity = 1 }
+            , { food = Ingredient Wheat, quantity = 1 }
+            ]
+
+        IceCream ->
+            [ { food = Product Milk, quantity = 1 }
+            , { food = Ingredient Sugar, quantity = 1 }
+            , { food = Ingredient Chocolate, quantity = 1 }
+            ]
+
+        Macaron ->
+            [ { food = Product Egg, quantity = 1 }
+            , { food = Ingredient Sugar, quantity = 1 }
+            , { food = Ingredient Nut, quantity = 1 }
+            ]
+
+        RoastBeef ->
+            [ { food = Product Steak, quantity = 1 }
+            , { food = Ingredient Potato, quantity = 1 }
+            ]
+
+        Spice ->
+            [ { food = Ingredient Sand, quantity = 1 }
+            , { food = Ingredient Worm, quantity = 1 }
+            ]
+
+        FishFilet ->
+            [ { food = Ingredient Fish, quantity = 1 } ]
+
 
 toColors : Food -> List Oklch
 toColors food =
@@ -661,55 +761,61 @@ ingredientToColor : Ingredient -> Oklch
 ingredientToColor ingredient =
     case ingredient of
         Avocado ->
-            Color.rgb255 0x00 0xFF 0x00 |> Oklch.fromColor
+            Color.rgb255 201 207 103 |> Oklch.fromColor
 
         Blueberry ->
-            Color.rgb255 0x99 0x00 0xFF |> Oklch.fromColor
+            Color.rgb255 45 22 108 |> Oklch.fromColor
 
         Chicken ->
-            Color.rgb255 0xFF 0x00 0x00 |> Oklch.fromColor
+            Color.rgb255 243 177 78 |> Oklch.fromColor
 
         Chocolate ->
-            Color.rgb255 0xBB 0x77 0x00 |> Oklch.fromColor
+            Color.rgb255 91 49 1 |> Oklch.fromColor
 
         Corn ->
-            Color.rgb255 0xFF 0xFF 0x00 |> Oklch.fromColor
+            Color.rgb255 240 224 0 |> Oklch.fromColor
 
         Cow ->
-            Color.rgb255 0xCC 0xCC 0xCC |> Oklch.fromColor
+            Color.rgb255 125 125 104 |> Oklch.fromColor
 
         Fish ->
-            Color.rgb255 0x44 0x44 0xFF |> Oklch.fromColor
+            Color.rgb255 250 128 114 |> Oklch.fromColor
 
         Lettuce ->
-            Color.rgb255 0x44 0xFF 0x44 |> Oklch.fromColor
+            Color.rgb255 128 192 75 |> Oklch.fromColor
 
         Nut ->
-            Color.rgb255 0x00 0x66 0x00 |> Oklch.fromColor
+            Color.rgb255 133 97 69 |> Oklch.fromColor
 
         Pig ->
-            Color.rgb255 0xFF 0x00 0x99 |> Oklch.fromColor
+            Color.rgb255 255 201 236 |> Oklch.fromColor
 
         Potato ->
-            Color.rgb255 0xCC 0xFF 0x00 |> Oklch.fromColor
+            Color.rgb255 176 137 83 |> Oklch.fromColor
 
         Rice ->
-            Color.rgb255 0xFF 0xFF 0xFF |> Oklch.fromColor
+            Color.rgb255 247 246 251 |> Oklch.fromColor
+
+        Sand ->
+            Color.rgb255 244 228 160 |> Oklch.fromColor
 
         Shrimps ->
-            Color.rgb255 0xFF 0x00 0xDD |> Oklch.fromColor
+            Color.rgb255 230 122 119 |> Oklch.fromColor
 
         Sugar ->
-            Color.rgb255 0x00 0xFF 0xFF |> Oklch.fromColor
+            Color.rgb255 234 236 234 |> Oklch.fromColor
 
         Tomato ->
-            Color.rgb255 0xFF 0x44 0x00 |> Oklch.fromColor
+            Color.rgb255 255 99 71 |> Oklch.fromColor
 
         Water ->
-            Color.rgb255 0x44 0x44 0xFF |> Oklch.fromColor
+            Color.rgb255 212 241 249 |> Oklch.fromColor
 
         Wheat ->
-            Color.rgb255 0xFF 0xFF 0x44 |> Oklch.fromColor
+            Color.rgb255 245 222 179 |> Oklch.fromColor
+
+        Worm ->
+            Color.rgb255 209 173 177 |> Oklch.fromColor
 
 
 isVegetarian : Food -> Bool
@@ -722,6 +828,9 @@ isVegetarian food =
             True
 
         Product Milk ->
+            True
+
+        Product Spice ->
             True
 
         Product product ->
@@ -768,6 +877,9 @@ isIngredientVegetarian ingredient =
         Rice ->
             True
 
+        Sand ->
+            True
+
         Shrimps ->
             False
 
@@ -781,4 +893,7 @@ isIngredientVegetarian ingredient =
             True
 
         Wheat ->
+            True
+
+        Worm ->
             True
