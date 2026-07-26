@@ -13,6 +13,7 @@ import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Json.Decode
 import Length exposing (Length, Meters)
+import List.Extra
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
 import Quantity exposing (Quantity)
@@ -949,6 +950,53 @@ svgTwoColumnGrid config rows =
             ]
 
 
+svgThreeColumnsGrid :
+    { x : Length
+    , y : Length
+    }
+    -> List (List Ingredient)
+    -> Svg msg
+svgThreeColumnsGrid config rows =
+    rows
+        |> List.indexedMap gridIngredientsRowToSvg
+        |> Svg.g
+            [ SvgAttributes.transformTranslate
+                { x = Length.inLightYears config.x
+                , y = Length.inLightYears config.y
+                }
+            ]
+
+
+gridIngredientsRowToSvg : Int -> List Ingredient -> Svg msg
+gridIngredientsRowToSvg y row =
+    let
+        rhythm : Float
+        rhythm =
+            Theme.planetRadius * 1.3
+    in
+    row
+        |> List.indexedMap
+            (\x ingredient ->
+                Svg.g
+                    [ SvgAttributes.transformTranslate
+                        { x = rhythm * (toFloat x - 1.5)
+                        , y = rhythm * (toFloat y + 1.1)
+                        }
+                    ]
+                    [ svgRadialBackground [ Food.ingredientToColor ingredient ]
+                    , Svg.image
+                        [ Svg.Attributes.xlinkHref (Food.ingredientToIcon ingredient)
+                        , SvgAttributes.x (Theme.planetRadius * 0.1)
+                        , SvgAttributes.y (Theme.planetRadius * 0.1)
+                        , SvgAttributes.width (Theme.planetRadius * 0.8)
+                        , SvgAttributes.height (Theme.planetRadius * 0.8)
+                        ]
+                        []
+                    ]
+            )
+        |> Svg.g []
+
+
 gridRowToSvg : Int -> GridRow -> Svg msg
 gridRowToSvg i row =
     case gridRowToTuple row of
@@ -965,7 +1013,7 @@ gridRowToSvg i row =
                         , y = Theme.planetRadius * 0.1
                         }
                     ]
-                    [ svgRadialBackground rowIcon
+                    [ svgRadialBackground rowIcon.colors
                     , Svg.image
                         [ Svg.Attributes.xlinkHref rowIcon.icon
                         , SvgAttributes.x (Theme.planetRadius * 0.1)
@@ -990,18 +1038,15 @@ gridRowToSvg i row =
 
 
 svgRadialBackground :
-    { icon : String
-    , title : String
-    , colors : List Oklch
-    }
+    List Oklch
     -> Svg msg
-svgRadialBackground rowIcon =
+svgRadialBackground colors =
     let
         radius : Float
         radius =
             Theme.planetRadius * 1.1 / 2
     in
-    case rowIcon.colors of
+    case colors of
         [] ->
             Svg.text ""
 
@@ -1018,7 +1063,7 @@ svgRadialBackground rowIcon =
             let
                 sectorDegrees : Int
                 sectorDegrees =
-                    360 // List.length rowIcon.colors
+                    360 // List.length colors
 
                 sector : Int -> Oklch -> Svg msg
                 sector i color =
@@ -1067,7 +1112,7 @@ svgRadialBackground rowIcon =
                         ]
                         []
             in
-            rowIcon.colors
+            colors
                 |> List.indexedMap sector
                 |> Svg.g
                     [ SvgAttributes.transformTranslate
@@ -1171,7 +1216,7 @@ viewPlanet { selected, highlighted } id planet =
                                             quantity =
                                                 farm.perTurn * farm.countdown
                                         in
-                                        ( -quantity, Ingredient quantity farm.ingredient )
+                                        ( -quantity, farm.ingredient )
                                             |> Just
 
                                     FactoryPlanet _ ->
@@ -1182,7 +1227,8 @@ viewPlanet { selected, highlighted } id planet =
                             )
                         |> List.sortBy Tuple.first
                         |> List.map Tuple.second
-                        |> svgTwoColumnGrid
+                        |> List.Extra.greedyGroupsOf 3
+                        |> svgThreeColumnsGrid
                             { x = cx
                             , y = cy
                             }
