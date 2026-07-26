@@ -279,6 +279,7 @@ calculateZoom model deltaY offsetX offsetY =
         maxHeight =
             Quantity.at model.zoom containerHeight
 
+        mousePosition : Point2d Meters ()
         mousePosition =
             Point2d.xy
                 (minX
