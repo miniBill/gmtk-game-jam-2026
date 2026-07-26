@@ -98,15 +98,15 @@ startGameButtons =
         [ Html.button
             [ Html.Events.onClick (Play Easy)
             ]
-            [ Html.text "Play game (easy mode - no complex recipes)" ]
+            [ Html.text "Easy mode" ]
         , Html.button
             [ Html.Events.onClick (Play Normal)
             ]
-            [ Html.text "Play game (normal mode)" ]
+            [ Html.text "Normal mode" ]
         , Html.button
             [ Html.Events.onClick (Play Hard)
             ]
-            [ Html.text "Play game (hard mode - deposit size limit)" ]
+            [ Html.text "Hard mode" ]
 
         -- , Html.button
         --     [ Html.Events.onClick PlaySound
