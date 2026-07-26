@@ -764,7 +764,7 @@ ingredientToColor ingredient =
             Color.rgb255 201 207 103 |> Oklch.fromColor
 
         Blueberry ->
-            Color.rgb255 45 22 108 |> Oklch.fromColor
+            Color.rgb255 73 58 145 |> Oklch.fromColor
 
         Chicken ->
             Color.rgb255 243 177 78 |> Oklch.fromColor
