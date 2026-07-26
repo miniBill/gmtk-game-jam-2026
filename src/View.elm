@@ -1,4 +1,4 @@
-module View exposing (view)
+module View exposing (svgContainerId, view)
 
 import Audio exposing (AudioData)
 import BoundingBox2d exposing (BoundingBox2d)
@@ -78,38 +78,41 @@ view _ model =
 viewPlaying : PlayingModel -> List (Html PlayingMsg)
 viewPlaying model =
     let
-        boundingBox : BoundingBox2d Meters ()
-        boundingBox =
-            model.planets
-                |> IdDict.values
-                |> List.map .position
-                |> BoundingBox2d.hull Point2d.origin
+        ( containerWidth, containerHeight ) =
+            model.svgContainerSize
 
-        { minX, minY, maxX, maxY } =
-            BoundingBox2d.extrema boundingBox
+        maxWidth : Length
+        maxWidth =
+            Quantity.at model.zoom (Quantity.toFloatQuantity containerWidth)
+
+        maxHeight : Length
+        maxHeight =
+            Quantity.at model.zoom (Quantity.toFloatQuantity containerHeight)
+
+        minX : Length
+        minX =
+            Point2d.xCoordinate model.center
+                |> Quantity.minus (Quantity.multiplyBy 0.5 maxWidth)
+
+        minY : Length
+        minY =
+            Point2d.yCoordinate model.center
+                |> Quantity.minus (Quantity.multiplyBy 0.5 maxHeight)
 
         viewBox : String
         viewBox =
-            let
-                padding : Length
-                padding =
-                    maximumLinkLength
-            in
-            SvgAttributes.viewBoxWithPadding padding
-                minX
-                minY
-                (Quantity.difference maxX minX)
-                (Quantity.difference maxY minY |> Quantity.plus Length.lightYear)
+            SvgAttributes.viewBox minX minY maxWidth maxHeight
     in
     [ let
         ( planetsViews, background ) =
             viewPlanets model
       in
       Svg.svg
-        [ style "display" "block"
+        [ Html.Attributes.id svgContainerId
+        , style "flex" "9"
+        , style "align-self" "stretch"
         , style "width" "100%"
         , style "max-height" "100dvh"
-        , style "flex" "9"
         , Svg.Attributes.viewBox viewBox
         ]
         [ Svg.defs []
@@ -171,6 +174,11 @@ viewPlaying model =
             ]
         ]
     ]
+
+
+svgContainerId : String
+svgContainerId =
+    "svg-container"
 
 
 bottomBox : PlayingModel -> Id PlanetId -> Planet -> Html PlayingMsg

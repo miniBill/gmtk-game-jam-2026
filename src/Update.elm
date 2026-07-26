@@ -2,11 +2,15 @@ module Update exposing (init, update)
 
 import Angle
 import Audio exposing (AudioCmd, AudioData)
+import Browser
+import Browser.Dom
 import Id exposing (Id(..), PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
 import List.Extra
+import Pixels
 import Point2d exposing (Point2d)
+import Process
 import Product exposing (Product(..))
 import Product.Dict
 import Quantity
@@ -17,6 +21,7 @@ import Theme
 import Time
 import Turn
 import Types exposing (FarmData, GameMode, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import View
 
 
 minimumPlanetDistance : Length
@@ -69,7 +74,7 @@ update audioData msg model =
                         |> updatePlanets
                         |> Playing
               }
-            , Cmd.none
+            , getSvgContainerSize
             , Audio.cmdNone
             )
 
@@ -104,6 +109,45 @@ update audioData msg model =
                 Lost _ ->
                     ( model, Cmd.none, Audio.cmdNone )
 
+        Resized _ _ ->
+            ( model, getSvgContainerSize, Audio.cmdNone )
+
+        GotSvgContainerSize (Err e) ->
+            let
+                _ =
+                    Debug.log "GotSvgContainerSize (Err e)" e
+            in
+            ( model, Cmd.none, Audio.cmdNone )
+
+        GotSvgContainerSize (Ok { viewport }) ->
+            case model.page of
+                Menu ->
+                    ( model, Cmd.none, Audio.cmdNone )
+
+                Playing playingModel ->
+                    ( { model
+                        | page =
+                            Playing
+                                { playingModel
+                                    | svgContainerSize =
+                                        ( Pixels.pixels (floor viewport.width)
+                                        , Pixels.pixels (floor viewport.height)
+                                        )
+                                }
+                      }
+                    , Cmd.none
+                    , Audio.cmdNone
+                    )
+
+                Lost _ ->
+                    ( model, Cmd.none, Audio.cmdNone )
+
+
+getSvgContainerSize =
+    Process.sleep 0
+        |> Task.andThen (\_ -> Browser.Dom.getViewportOf View.svgContainerId)
+        |> Task.attempt GotSvgContainerSize
+
 
 initPlayingModel : GameMode -> Int -> PlayingModel
 initPlayingModel gameMode initialSeed =
@@ -115,6 +159,9 @@ initPlayingModel gameMode initialSeed =
     , score = 0
     , gameMode = gameMode
     , rings = 1
+    , svgContainerSize = ( Pixels.pixels 200, Pixels.pixels 200 )
+    , center = Point2d.origin
+    , zoom = Quantity.rate Length.lightYear (Pixels.pixels 200)
     }
 
 

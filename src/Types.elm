@@ -1,12 +1,15 @@
 module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
 
 import Audio
+import Browser.Dom
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Meters)
+import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
 import Product exposing (Product)
 import Product.Dict exposing (ProductDict)
+import Quantity exposing (Quantity)
 import Random
 import Time
 
@@ -32,6 +35,9 @@ type alias PlayingModel =
     , score : Int
     , gameMode : GameMode
     , rings : Int
+    , svgContainerSize : ( Quantity Int Pixels, Quantity Int Pixels )
+    , center : Point2d Meters ()
+    , zoom : Quantity Float (Quantity.Rate Meters Pixels)
     }
 
 
@@ -124,6 +130,8 @@ type Msg
     | PlaySound
     | AudioLoadResult (Result Audio.LoadError Audio.Source)
     | PlayingMsg PlayingMsg
+    | Resized Int Int
+    | GotSvgContainerSize (Result Browser.Dom.Error Browser.Dom.Viewport)
 
 
 type PlayingMsg

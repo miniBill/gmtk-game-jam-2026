@@ -1,10 +1,11 @@
 port module Main exposing (main)
 
 import Audio exposing (Audio, AudioData)
+import Browser.Events
 import Json.Decode
 import Json.Encode
 import Quantity
-import Types exposing (Model, Msg, Page(..))
+import Types exposing (Model, Msg(..), Page(..))
 import Update
 import View
 
@@ -48,4 +49,4 @@ audio _ model =
 
 subscriptions : AudioData -> Model -> Sub Msg
 subscriptions _ _ =
-    Sub.none
+    Browser.Events.onResize Resized

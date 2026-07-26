@@ -28,16 +28,7 @@ run model =
             |> Err
 
     else
-        { initialSeed = newModel.initialSeed
-        , currentSeed = newModel.currentSeed
-        , planets = newModel.planets
-        , selected = newModel.selected
-        , highlighted = newModel.highlighted
-        , score = newModel.score
-        , gameMode = newModel.gameMode
-        , rings = newModel.rings
-        }
-            |> Ok
+        Ok newModel
 
 
 calculateExports :
