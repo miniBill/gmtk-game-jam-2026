@@ -11,7 +11,7 @@ import Point2d exposing (Point2d)
 import Quantity
 import Random
 import String.Extra
-import Types exposing (FarmData, GameMode, GamePhase(..), LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
+import Types exposing (FarmData, GameMode(..), GamePhase(..), LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
 
 
 minimumPlanetDistance : Length
@@ -580,24 +580,31 @@ addPlanet mode budget fromDistance model =
 
 
 depositGenerator : GameMode -> Random.Generator OccupiedPlanet
-depositGenerator { hard } =
-    if hard then
-        Random.map
-            (\capacity ->
-                DepositPlanet
-                    { capacity = Just capacity
-                    , content = Food.Dict.empty
-                    }
-            )
-            (Random.int 10 25)
-
-    else
-        Random.constant
-            (DepositPlanet
+depositGenerator gameMode =
+    case gameMode of
+        Easy ->
+            DepositPlanet
                 { capacity = Nothing
                 , content = Food.Dict.empty
                 }
-            )
+                |> Random.constant
+
+        Normal ->
+            DepositPlanet
+                { capacity = Nothing
+                , content = Food.Dict.empty
+                }
+                |> Random.constant
+
+        Hard ->
+            Random.map
+                (\capacity ->
+                    DepositPlanet
+                        { capacity = Just capacity
+                        , content = Food.Dict.empty
+                        }
+                )
+                (Random.int 10 25)
 
 
 factoryGenerator : Random.Generator OccupiedPlanet

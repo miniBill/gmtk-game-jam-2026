@@ -1,4 +1,4 @@
-module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, GamePhase(..), Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..), gamePhase)
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode(..), GamePhase(..), Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..), gamePhase)
 
 import Audio
 import Browser.Dom
@@ -52,8 +52,10 @@ type alias LostModel =
     }
 
 
-type alias GameMode =
-    { hard : Bool }
+type GameMode
+    = Easy
+    | Normal
+    | Hard
 
 
 type Selected
@@ -148,11 +150,30 @@ type GamePhase
 
 gamePhase : PlayingModel -> GamePhase
 gamePhase model =
-    if model.rings < 5 then
-        EarlyGame
+    case model.gameMode of
+        Easy ->
+            if model.rings < 8 then
+                EarlyGame
 
-    else if model.rings < 8 then
-        MidGame
+            else if model.rings < 13 then
+                MidGame
 
-    else
-        LateGame
+            else
+                LateGame
+
+        Normal ->
+            if model.rings < 5 then
+                EarlyGame
+
+            else if model.rings < 8 then
+                MidGame
+
+            else
+                LateGame
+
+        Hard ->
+            if model.rings < 8 then
+                MidGame
+
+            else
+                LateGame

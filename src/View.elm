@@ -23,7 +23,7 @@ import Svg.Attributes
 import Svg.Events
 import SvgAttributes
 import Theme
-import Types exposing (FactoryData, GamePhase(..), Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FactoryData, GameMode(..), GamePhase(..), Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -39,20 +39,7 @@ view _ model =
         ]
         (case model.page of
             Menu ->
-                [ Html.button
-                    [ Html.Events.onClick (Play { hard = False })
-                    ]
-                    [ Html.text "Play game" ]
-                , Html.button
-                    [ Html.Events.onClick (Play { hard = True })
-                    ]
-                    [ Html.text "Play game (hard mode - deposit have a size limit)" ]
-
-                -- , Html.button
-                --     [ Html.Events.onClick PlaySound
-                --     ]
-                --     [ Html.text "Play sound" ]
-                ]
+                [ startGameButtons ]
 
             Playing playingModel ->
                 viewPlaying playingModel
@@ -63,21 +50,35 @@ view _ model =
                     [ style "color" "white"
                     ]
                     [ Html.text ("Final score: " ++ String.fromInt lostModel.score) ]
-                , Html.button
-                    [ Html.Events.onClick (Play { hard = False })
-                    ]
-                    [ Html.text "Play game" ]
-                , Html.button
-                    [ Html.Events.onClick (Play { hard = True })
-                    ]
-                    [ Html.text "Play game (hard mode - deposit size limit)" ]
-
-                -- , Html.button
-                --     [ Html.Events.onClick PlaySound
-                --     ]
-                --     [ Html.text "Play sound" ]
+                , startGameButtons
                 ]
         )
+
+
+startGameButtons : Html Msg
+startGameButtons =
+    Html.div
+        [ style "display" "flex"
+        , style "gap" "16px"
+        ]
+        [ Html.button
+            [ Html.Events.onClick (Play Easy)
+            ]
+            [ Html.text "Play game (easy mode - no complex recipes)" ]
+        , Html.button
+            [ Html.Events.onClick (Play Normal)
+            ]
+            [ Html.text "Play game (normal mode)" ]
+        , Html.button
+            [ Html.Events.onClick (Play Hard)
+            ]
+            [ Html.text "Play game (hard mode - deposit size limit)" ]
+
+        -- , Html.button
+        --     [ Html.Events.onClick PlaySound
+        --     ]
+        --     [ Html.text "Play sound" ]
+        ]
 
 
 viewPlaying : PlayingModel -> List (Html PlayingMsg)
