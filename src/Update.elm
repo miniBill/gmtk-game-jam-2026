@@ -21,7 +21,7 @@ import View
 
 init : () -> ( Model, Cmd Msg, AudioCmd Msg )
 init () =
-    ( { page = Menu
+    ( { page = Menu ""
       , sound = Nothing
       }
     , Cmd.none
@@ -32,6 +32,14 @@ init () =
 update : AudioData -> Msg -> Model -> ( Model, Cmd Msg, AudioCmd Msg )
 update _ msg model =
     case {- Debug.log "msg" -} msg of
+        SetSeed seed ->
+            case model.page of
+                Menu _ ->
+                    ( { model | page = Menu seed }, Cmd.none, Audio.cmdNone )
+
+                _ ->
+                    ( model, Cmd.none, Audio.cmdNone )
+
         PlaySound ->
             case model.sound of
                 Nothing ->
@@ -48,7 +56,24 @@ update _ msg model =
 
         Play gameMode ->
             ( model
-            , Random.int 0 Random.maxInt |> Random.generate (InitialSeed gameMode)
+            , let
+                setSeed : Maybe Int
+                setSeed =
+                    case model.page of
+                        Menu seed ->
+                            String.toInt seed
+
+                        _ ->
+                            Nothing
+              in
+              case setSeed of
+                Nothing ->
+                    Random.int 0 Random.maxInt
+                        |> Random.generate (InitialSeed gameMode)
+
+                Just seed ->
+                    Random.constant seed
+                        |> Random.generate (InitialSeed gameMode)
             , Audio.cmdNone
             )
 
@@ -78,7 +103,7 @@ update _ msg model =
 
         PlayingMsg playingMsg ->
             case model.page of
-                Menu ->
+                Menu _ ->
                     ( model, Cmd.none, Audio.cmdNone )
 
                 Playing playing ->
@@ -106,7 +131,7 @@ update _ msg model =
 
         GotSvgContainerSize (Ok { viewport }) ->
             case model.page of
-                Menu ->
+                Menu _ ->
                     ( model, Cmd.none, Audio.cmdNone )
 
                 Playing playingModel ->

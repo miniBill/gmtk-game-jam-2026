@@ -21,7 +21,7 @@ type alias Model =
 
 
 type Page
-    = Menu
+    = Menu String
     | Playing PlayingModel
     | Lost LostModel
 
@@ -124,7 +124,8 @@ type alias ColonyData =
 
 
 type Msg
-    = Play GameMode
+    = SetSeed String
+    | Play GameMode
     | TimeResult Audio.Source Time.Posix
     | InitialSeed GameMode Int
     | PlaySound

@@ -47,8 +47,19 @@ view _ model =
                 children
     in
     case model.page of
-        Menu ->
-            container [] [ startGameButtons ]
+        Menu seed ->
+            container
+                [ style "flex-direction" "column" ]
+                [ startGameButtons
+                , Html.label [ style "color" "white" ]
+                    [ Html.text "Game seed (leave blank for random) "
+                    , Html.input
+                        [ Html.Attributes.value seed
+                        , Html.Events.onInput SetSeed
+                        ]
+                        []
+                    ]
+                ]
 
         Playing playingModel ->
             viewPlaying playingModel
@@ -68,6 +79,11 @@ view _ model =
                             ++ String.fromInt lostModel.turns
                             ++ " turns"
                         )
+                    ]
+                , Html.p
+                    [ style "color" "white"
+                    ]
+                    [ Html.text ("Seed: " ++ String.fromInt lostModel.initialSeed)
                     ]
                 , startGameButtons
                 ]
