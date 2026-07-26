@@ -8,7 +8,6 @@ import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Json.Decode
 import Length exposing (Length, Meters)
-import Phosphor
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
 import Product exposing (Product)
@@ -426,13 +425,13 @@ viewLinkPossibilities model from fromPlanet =
             Html.div [] []
                 :: List.map
                     (\{ product } ->
-                        icon
+                        htmlIcon
                             [ style "padding" "4px"
                             , style "height" "28px"
                             ]
                             { icon = Product.toIcon product
                             , title = Product.toString product
-                            , color = Just (Product.toColor product)
+                            , color = Product.toColor product
                             }
                     )
                     products
@@ -695,10 +694,10 @@ viewVirginPlanetOption planetId option =
             case option of
                 FarmPlanet { product, countdown, perTurn } ->
                     ( "#cfc"
-                    , [ icon [ style "height" "30px" ]
-                            { icon = Phosphor.tractor
+                    , [ htmlIcon [ style "height" "30px" ]
+                            { icon = Theme.iconTractor
                             , title = "Farm"
-                            , color = Nothing
+                            , color = "transparent"
                             }
                       , htmlTwoColumnGrid []
                             [ Product perTurn product
@@ -709,10 +708,10 @@ viewVirginPlanetOption planetId option =
 
                 FactoryPlanet { efficiency } ->
                     ( "#fcc"
-                    , [ icon [ style "height" "30px" ]
-                            { title = "Factory"
-                            , icon = Phosphor.factory
-                            , color = Nothing
+                    , [ htmlIcon [ style "height" "30px" ]
+                            { icon = Theme.iconFactory
+                            , title = "Factory"
+                            , color = "transparent"
                             }
                       , htmlTwoColumnGrid []
                             [ Efficiency efficiency
@@ -722,10 +721,10 @@ viewVirginPlanetOption planetId option =
 
                 DepositPlanet { capacity } ->
                     ( "#ccc"
-                    , [ icon [ style "height" "30px" ]
-                            { title = "Deposit"
-                            , icon = Phosphor.warehouse
-                            , color = Nothing
+                    , [ htmlIcon [ style "height" "30px" ]
+                            { icon = Theme.iconWarehouse
+                            , title = "Deposit"
+                            , color = "transparent"
                             }
                       , htmlTwoColumnGrid []
                             [ Capacity capacity
@@ -774,7 +773,7 @@ gridRowToHtml gridRow =
     case gridRowToTuple gridRow of
         Just ( text, rowIcon ) ->
             [ Html.div [] [ Html.text text ]
-            , icon [] rowIcon
+            , htmlIcon [] rowIcon
             ]
 
         Nothing ->
@@ -786,9 +785,9 @@ gridRowToTuple :
     ->
         Maybe
             ( String
-            , { icon : Phosphor.IconWeight -> Phosphor.IconVariant
+            , { icon : String
               , title : String
-              , color : Maybe String
+              , color : String
               }
             )
 gridRowToTuple gridRow =
@@ -797,25 +796,25 @@ gridRowToTuple gridRow =
             ( String.fromInt quantity
             , { icon = Product.toIcon product
               , title = Product.toString product
-              , color = Just (Product.toColor product)
+              , color = Product.toColor product
               }
             )
                 |> Just
 
         Countdown turns ->
             ( String.fromInt turns
-            , { icon = Phosphor.hourglass
+            , { icon = Theme.iconHourglass
               , title = "Turns"
-              , color = Nothing
+              , color = "white"
               }
             )
                 |> Just
 
         Efficiency efficiency ->
             ( String.fromInt efficiency
-            , { icon = Phosphor.speedometer
+            , { icon = Theme.iconSpeed
               , title = "Production per turn"
-              , color = Just "gray"
+              , color = "gray"
               }
             )
                 |> Just
@@ -825,40 +824,33 @@ gridRowToTuple gridRow =
 
         Capacity (Just capacity) ->
             ( String.fromInt capacity
-            , { icon = Phosphor.package
+            , { icon = Theme.iconPackage
               , title = "Capacity"
-              , color = Just "brown"
+              , color = "brown"
               }
             )
                 |> Just
 
 
-icon :
+htmlIcon :
     List (Attribute msg)
     ->
-        { icon : Phosphor.IconWeight -> Phosphor.IconVariant
+        { icon : String
         , title : String
-        , color : Maybe String
+        , color : String
         }
     -> Html msg
-icon attrs config =
-    config.icon Phosphor.Duotone
-        |> Phosphor.withSize 100
-        |> Phosphor.withSizeUnit "%"
-        |> Phosphor.toHtml []
-        |> List.singleton
-        |> Html.div
-            (style "height" "16px"
-                :: Html.Attributes.title config.title
-                :: (case config.color of
-                        Just color ->
-                            style "color" color
-                                :: attrs
-
-                        Nothing ->
-                            attrs
-                   )
-            )
+htmlIcon attrs config =
+    Html.img
+        (style "height" "18px"
+            :: style "padding" "2px"
+            :: style "border-radius" "999px"
+            :: Html.Attributes.title config.title
+            :: Html.Attributes.src config.icon
+            :: style "background" config.color
+            :: attrs
+        )
+        []
 
 
 selectionRow : List (Attribute msg) -> List (Html msg) -> Html msg
@@ -902,10 +894,28 @@ gridRowToSvg i row =
                     , y = (toFloat i + 1.1) * Theme.planetRadius * 1.3
                     }
                 ]
-                [ rowIcon.icon Phosphor.Duotone
-                    |> Phosphor.withSize (1.1 * Theme.planetRadius)
-                    |> Phosphor.withSizeUnit ""
-                    |> Phosphor.toHtml [ Svg.Attributes.fill (Maybe.withDefault "white" rowIcon.color) ]
+                [ Svg.g
+                    [ SvgAttributes.transformTranslate
+                        { x = 0
+                        , y = Theme.planetRadius * 0.1
+                        }
+                    ]
+                    [ Svg.circle
+                        [ SvgAttributes.cx (Theme.planetRadius * 0.5)
+                        , SvgAttributes.cy (Theme.planetRadius * 0.5)
+                        , SvgAttributes.r (Theme.planetRadius * 0.6)
+                        , Svg.Attributes.fill rowIcon.color
+                        ]
+                        []
+                    , Svg.image
+                        [ Svg.Attributes.xlinkHref rowIcon.icon
+                        , SvgAttributes.x (Theme.planetRadius * 0.1)
+                        , SvgAttributes.y (Theme.planetRadius * 0.1)
+                        , SvgAttributes.width (Theme.planetRadius * 0.8)
+                        , SvgAttributes.height (Theme.planetRadius * 0.8)
+                        ]
+                        []
+                    ]
                 , Svg.text_
                     [ SvgAttributes.x (-Theme.planetRadius * 0.25)
                     , Svg.Attributes.dominantBaseline "hanging"

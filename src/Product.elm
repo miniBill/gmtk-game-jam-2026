@@ -2,7 +2,7 @@ module Product exposing (Product(..), Recipe, all, primary, toColor, toIcon, toR
 
 import Color.Oklch as Oklch
 import Maybe.Extra
-import Phosphor
+import Theme
 
 
 type Product
@@ -11,10 +11,7 @@ type Product
     | Bread
     | Milk
     | Cheese
-    | Pepper
     | Pizza
-    | CoffeeBeans
-    | Coffee
 
 
 all : List Product
@@ -24,10 +21,7 @@ all =
     , Bread
     , Milk
     , Cheese
-    , Pepper
     , Pizza
-    , CoffeeBeans
-    , Coffee
     ]
 
 
@@ -36,38 +30,26 @@ primary =
     List.filter (\product -> Maybe.Extra.isNothing (toRecipe product)) all
 
 
-toIcon :
-    Product
-    -> Phosphor.IconWeight
-    -> Phosphor.IconVariant
+toIcon : Product -> String
 toIcon product =
     case product of
         Grain ->
-            Phosphor.grains
+            Theme.iconGrains
 
         Water ->
-            Phosphor.drop
+            Theme.iconWater
 
         Bread ->
-            Phosphor.bread
+            Theme.iconBread
 
         Cheese ->
-            Phosphor.cheese
-
-        Pepper ->
-            Phosphor.pepper
+            Theme.iconCheese
 
         Pizza ->
-            Phosphor.pizza
+            Theme.iconPizza
 
         Milk ->
-            Phosphor.cow
-
-        CoffeeBeans ->
-            Phosphor.coffeeBean
-
-        Coffee ->
-            Phosphor.coffee
+            Theme.iconCow
 
 
 toString : Product -> String
@@ -85,20 +67,11 @@ toString product =
         Cheese ->
             "Cheese"
 
-        Pepper ->
-            "Pepper"
-
         Pizza ->
             "Pizza"
 
         Milk ->
             "Milk"
-
-        CoffeeBeans ->
-            "Coffee Beans"
-
-        Coffee ->
-            "Coffee"
 
 
 type alias Recipe =
@@ -128,26 +101,12 @@ toRecipe product =
             ]
                 |> Just
 
-        Pepper ->
-            Nothing
-
         Milk ->
             Nothing
 
         Pizza ->
             [ { product = Bread, quantity = 1 }
             , { product = Cheese, quantity = 1 }
-            , { product = Pepper, quantity = 1 }
-            ]
-                |> Just
-
-        CoffeeBeans ->
-            Nothing
-
-        Coffee ->
-            [ { product = CoffeeBeans, quantity = 1 }
-            , { product = Water, quantity = 2 }
-            , { product = Milk, quantity = 2 }
             ]
                 |> Just
 
@@ -180,14 +139,5 @@ toColor product =
         Cheese ->
             std 60
 
-        Pepper ->
-            std 18
-
         Pizza ->
             std 330
-
-        CoffeeBeans ->
-            "brown"
-
-        Coffee ->
-            "black"
