@@ -15,7 +15,8 @@ body {
   /* background-image: url("media/Starfields/Starfield_03-1024x1024.png"); */
   background-image: url("media/Blue Nebula/Blue_Nebula_01-1024x1024.png");
   background-repeat: repeat;
-  background-size: cover;
+  /* background-size: contain; */
+  background-size: 1500px;
   font-family: "Roboto", sans-serif;
 }
 
