@@ -1,4 +1,4 @@
-module Theme exposing (bleep, iconAvocado, iconBacon, iconBlueberry, iconBread, iconButter, iconCaviar, iconCereal, iconCheese, iconChicken, iconChinese, iconChocolate, iconChocolateSpread, iconCity, iconCookie, iconCorn, iconCow, iconCroissant, iconDim, iconEggs, iconFactory, iconFish, iconFishAndChips, iconFrench, iconGrains, iconGuacamole, iconHamburger, iconHot, iconHourglass, iconJam, iconJamon, iconLettuce, iconMiso, iconNut, iconOmlette, iconPackage, iconPaella, iconPancake, iconPie, iconPig, iconPizza, iconPopcorn, iconPotato, iconPoultry, iconPrawn, iconQuesadilla, iconSalad, iconSamosa, iconSandwich, iconSpeed, iconSteak, iconSugar, iconTaco, iconTomato, iconTractor, iconWarehouse, iconWater, iconYogurt, planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
+module Theme exposing (bleep, iconAvocado, iconBacon, iconBlueberry, iconBread, iconButter, iconCaviar, iconCereal, iconCheese, iconChicken, iconChineseFriedRice, iconChocolate, iconChocolateSpread, iconCity, iconCookie, iconCorn, iconCow, iconCroissant, iconDimSum, iconEggs, iconFactory, iconFish, iconFishAndChips, iconFries, iconGuacamole, iconHamburger, iconHotDOg, iconHourglass, iconJam, iconLettuce, iconMilk, iconNut, iconOmlette, iconPackage, iconPaella, iconPancakeStack, iconPie, iconPig, iconPizza, iconPopcorn, iconPork, iconPotato, iconPoultry, iconPrawn, iconQuesadilla, iconRice, iconSalad, iconSamosa, iconSandwich, iconSoup, iconSpeed, iconSteak, iconSugar, iconSushi, iconTaco, iconTomato, iconTractor, iconWarehouse, iconWater, iconWheat, iconYoghurt, planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
 
 
 planetRadius : Float
@@ -116,8 +116,8 @@ iconCookie =
     "media/Products/icons8-cookie-100.png"
 
 
-iconChinese : String
-iconChinese =
+iconChineseFriedRice : String
+iconChineseFriedRice =
     "media/Products/icons8-chinese-fried-rice-100.png"
 
 
@@ -141,8 +141,8 @@ iconCroissant =
     "media/Products/icons8-croissant-100.png"
 
 
-iconDim : String
-iconDim =
+iconDimSum : String
+iconDimSum =
     "media/Products/icons8-dim-sum-100.png"
 
 
@@ -161,13 +161,13 @@ iconFishAndChips =
     "media/Products/icons8-fish-and-chips-100.png"
 
 
-iconFrench : String
-iconFrench =
+iconFries : String
+iconFries =
     "media/Products/icons8-french-fries-100.png"
 
 
-iconHot : String
-iconHot =
+iconHotDOg : String
+iconHotDOg =
     "media/Products/icons8-hot-dog-100.png"
 
 
@@ -181,6 +181,11 @@ iconLettuce =
     "media/Products/icons8-lettuce-100.png"
 
 
+iconMilk : String
+iconMilk =
+    "media/Products/icons8-milk-100.png"
+
+
 iconNut : String
 iconNut =
     "media/Products/icons8-nut-100.png"
@@ -191,8 +196,8 @@ iconOmlette =
     "media/Products/icons8-omlette-100.png"
 
 
-iconPancake : String
-iconPancake =
+iconPancakeStack : String
+iconPancakeStack =
     "media/Products/icons8-pancake-stack-100.png"
 
 
@@ -221,8 +226,13 @@ iconWater =
     "media/Products/icons8-water-100.png"
 
 
-iconGrains : String
-iconGrains =
+iconWheat : String
+iconWheat =
+    "media/Products/icons8-wheat-100.png"
+
+
+iconRice : String
+iconRice =
     "media/Products/icons8-grains-of-rice-100.png"
 
 
@@ -236,8 +246,8 @@ iconPrawn =
     "media/Products/icons8-prawn-100.png"
 
 
-iconMiso : String
-iconMiso =
+iconSoup : String
+iconSoup =
     "media/Products/icons8-miso-soup-100.png"
 
 
@@ -251,6 +261,11 @@ iconSugar =
     "media/Products/icons8-sugar-100.png"
 
 
+iconSushi : String
+iconSushi =
+    "media/Products/icons8-sushi-100.png"
+
+
 iconPoultry : String
 iconPoultry =
     "media/Products/icons8-poultry-leg-100.png"
@@ -261,8 +276,8 @@ iconTomato =
     "media/Products/icons8-tomato-100.png"
 
 
-iconYogurt : String
-iconYogurt =
+iconYoghurt : String
+iconYoghurt =
     "media/Products/icons8-yogurt-100.png"
 
 
@@ -281,8 +296,8 @@ iconPig =
     "media/Products/icons8-pig-100.png"
 
 
-iconJamon : String
-iconJamon =
+iconPork : String
+iconPork =
     "media/Products/icons8-jamon-100.png"
 
 

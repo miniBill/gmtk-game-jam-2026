@@ -202,6 +202,8 @@ viewPlaying model =
                 [ style "display" "flex"
                 , style "flex-wrap" "wrap"
                 , style "gap" "8px"
+                , style "max-height" "50dvh"
+                , style "overflow" "scroll"
                 ]
         , Html.div
             [ style "display" "flex"
