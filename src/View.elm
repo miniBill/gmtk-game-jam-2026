@@ -844,7 +844,13 @@ htmlIcon attrs config =
     Html.img
         (style "height" "18px"
             :: style "padding" "2px"
-            :: style "border-radius" "999px"
+            :: style "border-radius"
+                (if config.color == "transparent" then
+                    "0"
+
+                 else
+                    "999px"
+                )
             :: Html.Attributes.title config.title
             :: Html.Attributes.src config.icon
             :: style "background" config.color
