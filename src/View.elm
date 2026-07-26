@@ -2,8 +2,10 @@ module View exposing (svgContainerId, view)
 
 import Angle
 import Audio exposing (AudioData)
-import Color exposing (Color)
+import Color
 import Color.Oklch as Oklch exposing (Oklch)
+import Food exposing (Food, Ingredient, Product)
+import Food.Dict
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
@@ -13,8 +15,6 @@ import Json.Decode
 import Length exposing (Length, Meters)
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
-import Product exposing (Product)
-import Product.Dict
 import Quantity exposing (Quantity)
 import Round
 import Svg exposing (Svg)
@@ -192,23 +192,31 @@ viewPlaying model =
                     Just planet ->
                         bottomBox model planetId planet
         , Html.div [ style "flex" "1 0" ] []
-        , Html.p
-            [ style "color" "white"
-            , style "font-weight" "bold"
-            , style "text-align" "center"
-            ]
-            [ Html.text "Recipes" ]
-        , Product.all
-            |> List.filterMap viewRecipe
-            |> List.sortBy Tuple.first
-            |> List.map Tuple.second
-            |> Html.div
-                [ style "display" "flex"
-                , style "flex-wrap" "wrap"
-                , style "gap" "8px"
-                , style "max-height" "50dvh"
-                , style "overflow" "scroll"
+        , if model.rings < 4 then
+            Html.text ""
+
+          else
+            Html.p
+                [ style "color" "white"
+                , style "font-weight" "bold"
+                , style "text-align" "center"
                 ]
+                [ Html.text "Recipes" ]
+        , if model.rings < 4 then
+            Html.text ""
+
+          else
+            Food.allProducts
+                |> List.map viewRecipe
+                |> List.sortBy Tuple.first
+                |> List.map Tuple.second
+                |> Html.div
+                    [ style "display" "flex"
+                    , style "flex-wrap" "wrap"
+                    , style "gap" "8px"
+                    , style "max-height" "50dvh"
+                    , style "overflow" "scroll"
+                    ]
         , Html.div
             [ style "display" "flex"
             , style "gap" "8px"
@@ -349,10 +357,10 @@ viewLinkPossibilities model from fromPlanet =
                 , fromPlanet = fromPlanet
                 , to = to
                 , toPlanet = toPlanet
-                , available = products
+                , available = foods
                 , link =
                     IdDict.get to fromPlanet.links
-                        |> Maybe.withDefault Product.Dict.empty
+                        |> Maybe.withDefault Food.Dict.empty
                 }
                 ++ acc
 
@@ -388,8 +396,8 @@ viewLinkPossibilities model from fromPlanet =
                 []
                 model.planets
 
-        products : List { product : Product, quantity : Int }
-        products =
+        foods : List { food : Food, quantity : Int }
+        foods =
             case fromPlanet.kind of
                 VirginPlanet _ ->
                     []
@@ -397,13 +405,13 @@ viewLinkPossibilities model from fromPlanet =
                 ColonyPlanet _ ->
                     []
 
-                OccupiedPlanet (FarmPlanet { product, perTurn }) ->
-                    [ { product = product, quantity = perTurn } ]
+                OccupiedPlanet (FarmPlanet { ingredient, perTurn }) ->
+                    [ { food = Food.Ingredient ingredient, quantity = perTurn } ]
 
-                OccupiedPlanet (FactoryPlanet { order, efficiency }) ->
-                    case order of
-                        Just product ->
-                            [ { product = product
+                OccupiedPlanet (FactoryPlanet { product, efficiency }) ->
+                    case product of
+                        Just p ->
+                            [ { food = Food.Product p
                               , quantity = efficiency
                               }
                             ]
@@ -412,10 +420,10 @@ viewLinkPossibilities model from fromPlanet =
                             []
 
                 OccupiedPlanet (DepositPlanet { content }) ->
-                    Product.Dict.toList content
+                    Food.Dict.toList content
                         |> List.map
-                            (\( product, quantity ) ->
-                                { product = product
+                            (\( food, quantity ) ->
+                                { food = food
                                 , quantity = quantity
                                 }
                             )
@@ -423,24 +431,24 @@ viewLinkPossibilities model from fromPlanet =
         columns : String
         columns =
             "auto"
-                |> List.repeat (List.length products + 1)
+                |> List.repeat (List.length foods + 1)
                 |> String.join " "
 
         header : List (Html msg)
         header =
             Html.div [] []
                 :: List.map
-                    (\{ product } ->
+                    (\{ food } ->
                         htmlIcon
                             [ style "padding" "4px"
                             , style "height" "28px"
                             ]
-                            { icon = Product.toIcon product
-                            , title = Product.toString product
-                            , colors = Product.toColors product
+                            { icon = Food.toIcon food
+                            , title = Food.toString food
+                            , colors = Food.toColors food
                             }
                     )
-                    products
+                    foods
     in
     [ Html.p [ style "color" "white" ] [ Html.text "and is sending" ]
     , Html.div
@@ -459,7 +467,7 @@ viewLinkPossibility :
         , fromPlanet : Planet
         , to : Id PlanetId
         , toPlanet : { links : IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d Meters () }
-        , available : List { product : Product, quantity : Int }
+        , available : List { food : Food, quantity : Int }
         , link : Link
         }
     -> List (Html PlayingMsg)
@@ -498,12 +506,12 @@ viewLinkPossibility model config =
                 , Html.text config.toPlanet.name
                 ]
 
-        viewProductInput : { product : Product, quantity : Int } -> Html PlayingMsg
-        viewProductInput { product, quantity } =
+        viewProductInput : { food : Food, quantity : Int } -> Html PlayingMsg
+        viewProductInput { food, quantity } =
             let
                 value : Int
                 value =
-                    Product.Dict.get product config.link
+                    Food.Dict.get food config.link
                         |> Maybe.withDefault 0
             in
             Html.div
@@ -521,7 +529,7 @@ viewLinkPossibility model config =
                             v
                                 |> String.toInt
                                 |> Maybe.withDefault value
-                                |> SetLink config.from config.to product
+                                |> SetLink config.from config.to food
                         )
                     ]
                     []
@@ -557,7 +565,7 @@ viewSelectedPlanet planetId planet =
             , htmlTwoColumnGrid
                 [ style "color" "white"
                 ]
-                [ Product colony.quantity colony.product
+                [ Food colony.quantity colony.product
                 , Countdown colony.countdown
                 ]
             ]
@@ -575,7 +583,7 @@ viewSelectedPlanet planetId planet =
                 [ style "align-self" "center"
                 , style "color" "white"
                 ]
-                [ Product farm.perTurn farm.product
+                [ Ingredient farm.perTurn farm.ingredient
                 , Countdown farm.countdown
                 ]
             ]
@@ -598,15 +606,16 @@ viewSelectedPlanet planetId planet =
                     , style "text-align" "center"
                     , style "font-weight" "bold"
                     ]
-                    [ case factory.order of
+                    [ case factory.product of
                         Just _ ->
                             Html.text ("The planet " ++ planet.name ++ " is producing")
 
                         Nothing ->
                             Html.text ("The planet " ++ planet.name ++ " can produce")
                     ]
-                , selectionRow []
-                    (List.filterMap (viewFactoryOption factory) Product.all)
+                , Food.allProducts
+                    |> List.map (viewFactoryOption factory)
+                    |> selectionRow []
                     |> Html.map (SetFactoryProduction planetId)
                 ]
 
@@ -617,80 +626,75 @@ viewSelectedPlanet planetId planet =
                 , style "text-align" "center"
                 , style "font-weight" "bold"
                 ]
-                [ if Product.Dict.isEmpty deposit.content then
+                [ if Food.Dict.isEmpty deposit.content then
                     Html.text ("The planet " ++ planet.name ++ " is empty")
 
                   else
                     Html.text ("The planet " ++ planet.name ++ " contains")
                 ]
             , deposit.content
-                |> Product.Dict.toList
-                |> List.map (\( product, quantity ) -> Product quantity product)
+                |> Food.Dict.toList
+                |> List.map (\( product, quantity ) -> Food quantity product)
                 |> htmlTwoColumnGrid []
             ]
 
 
-viewFactoryOption : FactoryData -> Product -> Maybe (Html (Maybe Product))
+viewFactoryOption : FactoryData -> Product -> Html (Maybe Product)
 viewFactoryOption factory product =
-    case Product.toRecipe product of
-        Nothing ->
-            Nothing
+    let
+        selected : Bool
+        selected =
+            factory.product == Just product
+    in
+    htmlTwoColumnGrid
+        [ style "flex-direction" "column"
+        , if selected then
+            style "background" "#f44"
 
-        Just _ ->
-            let
-                selected : Bool
-                selected =
-                    factory.order == Just product
-            in
-            htmlTwoColumnGrid
-                [ style "flex-direction" "column"
-                , if selected then
-                    style "background" "#f44"
+          else
+            style "background" "gray"
+        , style "padding" "8px"
+        , style "align-items" "center"
+        , Html.Attributes.class "on-hover-highlight"
+        , if selected then
+            Html.Events.onClick Nothing
 
-                  else
-                    style "background" "gray"
-                , style "padding" "8px"
-                , style "align-items" "center"
-                , Html.Attributes.class "on-hover-highlight"
-                , if selected then
-                    Html.Events.onClick Nothing
-
-                  else
-                    Html.Events.onClick (Just product)
-                , style "cursor" "pointer"
-                ]
-                [ Product factory.efficiency product
-                ]
-                |> Just
+          else
+            Html.Events.onClick (Just product)
+        , style "cursor" "pointer"
+        ]
+        [ Product factory.efficiency product
+        ]
 
 
-viewRecipe : Product -> Maybe ( Int, Html msg )
+viewRecipe : Product -> ( Int, Html msg )
 viewRecipe product =
-    Product.toRecipe product
-        |> Maybe.map
-            (\recipe ->
-                ( List.length recipe
-                , Html.div
-                    [ style "display" "flex"
-                    , style "flex-direction" "column"
-                    , style "background" "gray"
-                    , style "padding" "8px"
-                    , style "align-items" "center"
-                    , Html.Attributes.class "on-hover-highlight"
-                    , style "cursor" "pointer"
-                    ]
-                    [ htmlTwoColumnGrid []
-                        [ Product 1 product
-                        ]
-                    , Html.text "from"
-                    , htmlTwoColumnGrid []
-                        (List.map
-                            (\ingredient -> Product ingredient.quantity ingredient.product)
-                            recipe
-                        )
-                    ]
-                )
+    let
+        recipe : Food.Recipe
+        recipe =
+            Food.toRecipe product
+    in
+    ( List.length recipe
+    , Html.div
+        [ style "display" "flex"
+        , style "flex-direction" "column"
+        , style "background" "gray"
+        , style "padding" "8px"
+        , style "align-items" "center"
+        , Html.Attributes.class "on-hover-highlight"
+        , style "cursor" "pointer"
+        ]
+        [ htmlTwoColumnGrid []
+            [ Product 1 product
+            ]
+        , Html.text "from"
+        , htmlTwoColumnGrid []
+            (List.map
+                (\ingredient -> Food ingredient.quantity ingredient.food)
+                recipe
             )
+        ]
+    )
 
 
 viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
@@ -698,7 +702,7 @@ viewVirginPlanetOption planetId option =
     let
         ( background, children ) =
             case option of
-                FarmPlanet { product, countdown, perTurn } ->
+                FarmPlanet { ingredient, countdown, perTurn } ->
                     ( "#cfc"
                     , [ htmlIcon [ style "height" "30px" ]
                             { icon = Theme.iconTractor
@@ -706,7 +710,7 @@ viewVirginPlanetOption planetId option =
                             , colors = []
                             }
                       , htmlTwoColumnGrid []
-                            [ Product perTurn product
+                            [ Ingredient perTurn ingredient
                             , Countdown countdown
                             ]
                       ]
@@ -768,7 +772,9 @@ htmlTwoColumnGrid attrs children =
 
 
 type GridRow
-    = Product Int Product
+    = Ingredient Int Ingredient
+    | Product Int Product
+    | Food Int Food
     | Countdown Int
     | Efficiency Int
     | Capacity (Maybe Int)
@@ -798,11 +804,29 @@ gridRowToTuple :
             )
 gridRowToTuple gridRow =
     case gridRow of
+        Food quantity food ->
+            ( String.fromInt quantity
+            , { icon = Food.toIcon food
+              , title = Food.toString food
+              , colors = Food.toColors food
+              }
+            )
+                |> Just
+
         Product quantity product ->
             ( String.fromInt quantity
-            , { icon = Product.toIcon product
-              , title = Product.toString product
-              , colors = Product.toColors product
+            , { icon = Food.productToIcon product
+              , title = Food.productToString product
+              , colors = Food.productToColors product
+              }
+            )
+                |> Just
+
+        Ingredient quantity ingredient ->
+            ( String.fromInt quantity
+            , { icon = Food.ingredientToIcon ingredient
+              , title = Food.ingredientToString ingredient
+              , colors = [ Food.ingredientToColor ingredient ]
               }
             )
                 |> Just
@@ -990,7 +1014,7 @@ svgRadialBackground rowIcon =
                 ]
                 []
 
-        _ ->
+        _ :: _ :: _ ->
             let
                 sectorDegrees : Int
                 sectorDegrees =
@@ -1147,7 +1171,7 @@ viewPlanet { selected, highlighted } id planet =
                                             quantity =
                                                 farm.perTurn * farm.countdown
                                         in
-                                        ( -quantity, Product quantity farm.product )
+                                        ( -quantity, Ingredient quantity farm.ingredient )
                                             |> Just
 
                                     FactoryPlanet _ ->
@@ -1170,7 +1194,7 @@ viewPlanet { selected, highlighted } id planet =
                         { x = cx
                         , y = cy
                         }
-                        [ Product colony.quantity colony.product
+                        [ Food colony.quantity colony.product
                         , Countdown colony.countdown
                         ]
                     ]
@@ -1180,7 +1204,7 @@ viewPlanet { selected, highlighted } id planet =
                         { x = cx
                         , y = cy
                         }
-                        [ Product farm.perTurn farm.product
+                        [ Ingredient farm.perTurn farm.ingredient
                         , Countdown farm.countdown
                         ]
                     ]
@@ -1190,7 +1214,7 @@ viewPlanet { selected, highlighted } id planet =
                         { x = cx
                         , y = cy
                         }
-                        (case factory.order of
+                        (case factory.product of
                             Just product ->
                                 [ Product factory.efficiency product
                                 ]
@@ -1205,8 +1229,8 @@ viewPlanet { selected, highlighted } id planet =
                     [ svgTwoColumnGrid { x = cx, y = cy }
                         (Capacity deposit.capacity
                             :: List.map
-                                (\( product, quantity ) -> Product quantity product)
-                                (Product.Dict.toList deposit.content)
+                                (\( product, quantity ) -> Food quantity product)
+                                (Food.Dict.toList deposit.content)
                         )
                     ]
     in
@@ -1263,7 +1287,7 @@ viewLinks model =
 
 viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> Maybe (Svg PlayingMsg)
 viewLink model from fromPlanet to link =
-    if Product.Dict.all (\_ v -> v <= 0) link then
+    if Food.Dict.all (\_ v -> v <= 0) link then
         Nothing
 
     else

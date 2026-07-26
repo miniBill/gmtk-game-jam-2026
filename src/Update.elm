@@ -2,13 +2,13 @@ module Update exposing (init, update)
 
 import Audio exposing (AudioCmd, AudioData)
 import Browser.Dom
+import Food
+import Food.Dict
 import IdDict
 import Length
 import Pixels
 import Point2d
 import Process
-import Product exposing (Product(..))
-import Product.Dict
 import Quantity
 import Random
 import Task
@@ -159,7 +159,7 @@ initialEarth =
     , links = IdDict.empty
     , kind =
         ColonyPlanet
-            { product = Water
+            { product = Food.Ingredient Food.Water
             , quantity = 1
             , countdown = 10
             }
@@ -219,7 +219,7 @@ updatePlaying msg model =
                                 OccupiedPlanet (FactoryPlanet factory) ->
                                     { planet
                                         | kind =
-                                            OccupiedPlanet (FactoryPlanet { factory | order = order })
+                                            OccupiedPlanet (FactoryPlanet { factory | product = order })
                                     }
 
                                 _ ->
@@ -242,8 +242,8 @@ updatePlaying msg model =
                                     IdDict.update to
                                         (\links ->
                                             links
-                                                |> Maybe.withDefault Product.Dict.empty
-                                                |> Product.Dict.insert product quantity
+                                                |> Maybe.withDefault Food.Dict.empty
+                                                |> Food.Dict.insert product quantity
                                                 |> Just
                                         )
                                         planet.links

@@ -2,13 +2,13 @@ module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode,
 
 import Audio
 import Browser.Dom
+import Food exposing (Food, Ingredient, Product)
+import Food.Dict exposing (FoodDict)
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Meters)
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
-import Product exposing (Product)
-import Product.Dict exposing (ProductDict)
 import Quantity exposing (Quantity)
 import Random
 import Time
@@ -75,7 +75,7 @@ type alias Planet =
 
 
 type alias Link =
-    ProductDict Int
+    FoodDict Int
 
 
 type PlanetKind
@@ -91,7 +91,7 @@ type OccupiedPlanet
 
 
 type alias FarmData =
-    { product : Product
+    { ingredient : Ingredient
     , countdown : Int
     , perTurn : Int
     }
@@ -99,19 +99,19 @@ type alias FarmData =
 
 type alias FactoryData =
     { efficiency : Int
-    , order : Maybe Product
-    , deposit : ProductDict Int
+    , product : Maybe Product
+    , deposit : FoodDict Int
     }
 
 
 type alias DepositData =
     { capacity : Maybe Int
-    , content : ProductDict Int
+    , content : FoodDict Int
     }
 
 
 type alias ColonyData =
-    { product : Product
+    { product : Food
     , quantity : Int
     , countdown : Int
     }
@@ -135,6 +135,6 @@ type PlayingMsg
     | SetFactoryProduction (Id PlanetId) (Maybe Product)
     | HighlightPlanet (Id PlanetId)
     | HighlightNone
-    | SetLink (Id PlanetId) (Id PlanetId) Product Int
+    | SetLink (Id PlanetId) (Id PlanetId) Food Int
     | MouseWheel (Quantity Float (Quantity.Rate Meters Pixels)) (Point2d Meters ())
     | MouseMove (Point2d Meters ())

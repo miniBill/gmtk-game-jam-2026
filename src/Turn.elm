@@ -1,13 +1,13 @@
 module Turn exposing (addNewPlanets, run)
 
 import Angle
+import Food exposing (Food, Ingredient)
+import Food.Dict exposing (FoodDict)
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import List.Extra
 import Point2d exposing (Point2d)
-import Product exposing (Product)
-import Product.Dict exposing (ProductDict)
 import Quantity
 import Random
 import String.Extra
@@ -52,7 +52,7 @@ calculateExports :
     PlayingModel
     ->
         ( PlayingModel
-        , IdDict PlanetId (ProductDict Int)
+        , IdDict PlanetId (FoodDict Int)
         )
 calculateExports model =
     let
@@ -68,22 +68,22 @@ calculateExports model =
 calculateExport :
     Id PlanetId
     -> Planet
-    -> ( IdDict PlanetId Planet, IdDict PlanetId (ProductDict Int) )
-    -> ( IdDict PlanetId Planet, IdDict PlanetId (ProductDict Int) )
+    -> ( IdDict PlanetId Planet, IdDict PlanetId (FoodDict Int) )
+    -> ( IdDict PlanetId Planet, IdDict PlanetId (FoodDict Int) )
 calculateExport planetId planet (( accPlanets, accExports ) as acc) =
     let
         calculate :
-            ProductDict Int
+            FoodDict Int
             ->
-                ( IdDict PlanetId (ProductDict Int)
-                , ProductDict Int
+                ( IdDict PlanetId (FoodDict Int)
+                , FoodDict Int
                 )
         calculate available =
             IdDict.fold
                 (\to wanted ( exporting, remaining ) ->
                     let
                         ( toAdd, newRemaining ) =
-                            Product.Dict.merge
+                            Food.Dict.merge
                                 (\_ _ iacc -> iacc)
                                 (\product want remain ( exportAcc, remainAcc ) ->
                                     let
@@ -91,27 +91,27 @@ calculateExport planetId planet (( accPlanets, accExports ) as acc) =
                                         quantity =
                                             min want remain
                                     in
-                                    ( Product.Dict.insert product quantity exportAcc
-                                    , Product.Dict.insert product (remain - quantity) remainAcc
+                                    ( Food.Dict.insert product quantity exportAcc
+                                    , Food.Dict.insert product (remain - quantity) remainAcc
                                     )
                                 )
                                 (\_ _ iacc -> iacc)
                                 wanted
                                 remaining
-                                ( Product.Dict.empty, remaining )
+                                ( Food.Dict.empty, remaining )
                     in
                     ( IdDict.insert to toAdd exporting, newRemaining )
                 )
                 ( IdDict.empty, available )
                 planet.links
 
-        merge : IdDict PlanetId (ProductDict Int) -> IdDict PlanetId (ProductDict Int)
+        merge : IdDict PlanetId (FoodDict Int) -> IdDict PlanetId (FoodDict Int)
         merge calculated =
             IdDict.updateWith calculated
                 { inBoth =
                     \k l r iacc ->
                         IdDict.insert k
-                            (Product.Dict.mergeSum l r)
+                            (Food.Dict.mergeSum l r)
                             iacc
                 , inNew = \k v iacc -> IdDict.insert k v iacc
                 }
@@ -126,50 +126,51 @@ calculateExport planetId planet (( accPlanets, accExports ) as acc) =
 
         OccupiedPlanet (FarmPlanet farm) ->
             let
-                available : ProductDict Int
+                available : FoodDict Int
                 available =
                     if farm.countdown > 0 then
-                        Product.Dict.singleton farm.product farm.perTurn
+                        Food.Dict.singleton
+                            (Food.Ingredient farm.ingredient)
+                            farm.perTurn
 
                     else
-                        Product.Dict.empty
+                        Food.Dict.empty
             in
             ( accPlanets, merge (Tuple.first (calculate available)) )
 
         OccupiedPlanet (FactoryPlanet factory) ->
             let
-                available : ProductDict Int
+                available : FoodDict Int
                 available =
-                    Maybe.map2
-                        (\product recipe ->
+                    Maybe.map
+                        (\product ->
                             let
                                 quantity : Int
                                 quantity =
                                     List.foldl
-                                        (\recipeLine iacc ->
+                                        (\line iacc ->
                                             let
                                                 has : Int
                                                 has =
-                                                    Product.Dict.get recipeLine.product factory.deposit
+                                                    Food.Dict.get line.food factory.deposit
                                                         |> Maybe.withDefault 0
                                             in
-                                            min iacc (has // recipeLine.quantity)
+                                            min iacc (has // line.quantity)
                                         )
                                         factory.efficiency
-                                        recipe
+                                        (Food.toRecipe product)
                             in
-                            Product.Dict.singleton product quantity
+                            Food.Dict.singleton (Food.Product product) quantity
                         )
-                        factory.order
-                        (Maybe.andThen Product.toRecipe factory.order)
-                        |> Maybe.withDefault Product.Dict.empty
+                        factory.product
+                        |> Maybe.withDefault Food.Dict.empty
             in
             ( IdDict.insert planetId
                 { planet
                     | kind =
                         OccupiedPlanet
                             (FactoryPlanet
-                                { factory | deposit = Product.Dict.empty }
+                                { factory | deposit = Food.Dict.empty }
                             )
                 }
                 accPlanets
@@ -196,7 +197,7 @@ calculateExport planetId planet (( accPlanets, accExports ) as acc) =
 
 applyImport :
     ( PlayingModel
-    , IdDict PlanetId (ProductDict Int)
+    , IdDict PlanetId (FoodDict Int)
     )
     -> PlayingModel
 applyImport ( model, exports ) =
@@ -205,7 +206,7 @@ applyImport ( model, exports ) =
             IdDict.updateWith exports
                 { inBoth =
                     \planetId planet imports acc ->
-                        if Product.Dict.all (\_ q -> q == 0) imports then
+                        if Food.Dict.all (\_ q -> q == 0) imports then
                             acc
 
                         else
@@ -214,7 +215,7 @@ applyImport ( model, exports ) =
                                     acc
 
                                 ColonyPlanet colony ->
-                                    case Product.Dict.get colony.product imports of
+                                    case Food.Dict.get colony.product imports of
                                         Just got ->
                                             IdDict.insert planetId
                                                 { planet
@@ -237,7 +238,7 @@ applyImport ( model, exports ) =
 
                                 OccupiedPlanet (DepositPlanet deposit) ->
                                     let
-                                        newContent : ProductDict Int
+                                        newContent : FoodDict Int
                                         newContent =
                                             fillDepositWith imports deposit
                                     in
@@ -253,22 +254,22 @@ applyImport ( model, exports ) =
     }
 
 
-fillDepositWith : ProductDict Int -> Types.DepositData -> ProductDict Int
+fillDepositWith : FoodDict Int -> Types.DepositData -> FoodDict Int
 fillDepositWith imports { capacity, content } =
     case capacity of
         Nothing ->
-            Product.Dict.mergeSum content imports
+            Food.Dict.mergeSum content imports
 
         Just total ->
             let
                 availableCapacity : Int
                 availableCapacity =
-                    total - Product.Dict.sum content
+                    total - Food.Dict.sum content
             in
-            fillDepositStep availableCapacity (Product.Dict.toList imports) [] content
+            fillDepositStep availableCapacity (Food.Dict.toList imports) [] content
 
 
-fillDepositStep : Int -> List ( Product, Int ) -> List ( Product, Int ) -> ProductDict Int -> ProductDict Int
+fillDepositStep : Int -> List ( Food, Int ) -> List ( Food, Int ) -> FoodDict Int -> FoodDict Int
 fillDepositStep availableCapacity queue next content =
     if availableCapacity <= 0 then
         content
@@ -291,7 +292,7 @@ fillDepositStep availableCapacity queue next content =
                     fillDepositStep (availableCapacity - 1)
                         tail
                         (( product, quantity - 1 ) :: next)
-                        (Product.Dict.update product
+                        (Food.Dict.update product
                             (\found ->
                                 found
                                     |> Maybe.withDefault 0
@@ -371,12 +372,28 @@ updateCountdown rings planet =
                         }
                     )
                     (Random.int 1 rings)
-                    (case Product.all of
-                        [] ->
-                            Random.constant Product.Water
+                    (if rings < 5 then
+                        case
+                            Food.allIngredients
+                                |> List.Extra.removeWhen
+                                    (\ingredient -> colonyNeverAsks (Food.Ingredient ingredient))
+                        of
+                            [] ->
+                                Random.constant (Food.Ingredient Food.Water)
 
-                        h :: t ->
-                            Random.uniform h t
+                            h :: t ->
+                                Random.map Food.Ingredient (Random.uniform h t)
+
+                     else
+                        case
+                            Food.all
+                                |> List.Extra.removeWhen colonyNeverAsks
+                        of
+                            [] ->
+                                Random.constant (Food.Ingredient Food.Water)
+
+                            h :: t ->
+                                Random.uniform h t
                     )
                     |> PlanetScored colony.countdown
 
@@ -403,6 +420,25 @@ updateCountdown rings planet =
 
         OccupiedPlanet (DepositPlanet _) ->
             PlanetUnchanged
+
+
+colonyNeverAsks : Food -> Bool
+colonyNeverAsks food =
+    case food of
+        Food.Ingredient Food.Chicken ->
+            True
+
+        Food.Ingredient Food.Cow ->
+            True
+
+        Food.Ingredient Food.Fish ->
+            True
+
+        Food.Ingredient Food.Pig ->
+            True
+
+        _ ->
+            False
 
 
 addNewPlanets : PlayingModel -> PlayingModel
@@ -538,7 +574,7 @@ depositGenerator { hard } =
             (\capacity ->
                 DepositPlanet
                     { capacity = Just capacity
-                    , content = Product.Dict.empty
+                    , content = Food.Dict.empty
                     }
             )
             (Random.int 10 25)
@@ -547,7 +583,7 @@ depositGenerator { hard } =
         Random.constant
             (DepositPlanet
                 { capacity = Nothing
-                , content = Product.Dict.empty
+                , content = Food.Dict.empty
                 }
             )
 
@@ -558,8 +594,8 @@ factoryGenerator =
         (\efficiency ->
             FactoryPlanet
                 { efficiency = efficiency
-                , deposit = Product.Dict.empty
-                , order = Nothing
+                , deposit = Food.Dict.empty
+                , product = Nothing
                 }
         )
         (Random.weighted ( 0.25, 0 )
@@ -580,21 +616,21 @@ farmGenerator count acc =
 
     else
         Random.map3 FarmData
-            (randomProduct (List.map .product acc))
+            (randomIngredient (List.map .ingredient acc))
             (Random.int 2 10)
             (Random.int 1 3)
             |> Random.andThen (\farm -> farmGenerator (count - 1) (farm :: acc))
 
 
-randomProduct : List Product -> Random.Generator Product
-randomProduct existing =
+randomIngredient : List Ingredient -> Random.Generator Ingredient
+randomIngredient existing =
     case
         List.Extra.removeWhen
             (\product -> List.member product existing)
-            Product.primary
+            Food.allIngredients
     of
         [] ->
-            Random.constant Product.Water
+            Random.constant Food.Water
 
         h :: t ->
             Random.uniform h t
