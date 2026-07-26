@@ -1350,7 +1350,7 @@ viewPlanet { selected, highlighted } id planet =
                 , SvgAttributes.y y
                 , SvgAttributes.width (Theme.planetRadius * 2)
                 , SvgAttributes.height (Theme.planetRadius * 2)
-                , Svg.Attributes.xlinkHref src
+                , Html.Attributes.attribute "href" src
                 , if fade then
                     Svg.Attributes.filter fadeFilter.ref
 
@@ -1522,19 +1522,19 @@ planetImage : Planet -> ( String, { fade : Bool } )
 planetImage planet =
     case planet.kind of
         VirginPlanet _ ->
-            ( Theme.planetIce, { fade = False } )
+            ( Theme.planetVirgin, { fade = False } )
 
         ColonyPlanet { countdown } ->
-            ( Theme.planetBlackHole, { fade = countdown <= 0 } )
+            ( Theme.planetColony, { fade = countdown <= 0 } )
 
         OccupiedPlanet (FarmPlanet { countdown }) ->
-            ( Theme.planetTerran, { fade = countdown <= 0 } )
+            ( Theme.planetFarm, { fade = countdown <= 0 } )
 
         OccupiedPlanet (FactoryPlanet _) ->
-            ( Theme.planetLava, { fade = False } )
+            ( Theme.iconFactory, { fade = False } )
 
         OccupiedPlanet (DepositPlanet _) ->
-            ( Theme.planetBarren, { fade = False } )
+            ( Theme.planetDeposit, { fade = False } )
 
 
 viewLinks : PlayingModel -> List (Svg PlayingMsg)

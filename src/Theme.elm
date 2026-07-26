@@ -1,4 +1,4 @@
-module Theme exposing (bleep, iconAvocado, iconBacon, iconBlueberry, iconBread, iconButter, iconCaviar, iconCereal, iconCheese, iconChicken, iconChocolate, iconChocolateSpread, iconCity, iconCookie, iconCorn, iconCow, iconCroissant, iconDimSum, iconDolmades, iconEggs, iconFactory, iconFish, iconFishAndChips, iconFishFilet, iconFriedChicken, iconFriedRice, iconFries, iconHamburger, iconHotDog, iconHourglass, iconIceCream, iconJam, iconLettuce, iconMacaron, iconMilk, iconNut, iconOmlette, iconPackage, iconPaella, iconPancakes, iconPie, iconPig, iconPizza, iconPopcorn, iconPork, iconPotato, iconPoultry, iconPrawn, iconQuesadilla, iconRice, iconRoastBeef, iconSalad, iconSamosa, iconSand, iconSandwich, iconSoup, iconSpeed, iconSpice, iconSteak, iconSugar, iconSushi, iconTaco, iconTomato, iconTortillaChips, iconTractor, iconWarehouse, iconWater, iconWheat, iconWorm, iconYoghurt, planetBarren, planetBlackHole, planetIce, planetLava, planetRadius, planetTerran)
+module Theme exposing (bleep, iconAvocado, iconBacon, iconBlueberry, iconBread, iconButter, iconCaviar, iconCereal, iconCheese, iconChicken, iconChocolate, iconChocolateSpread, iconCity, iconCookie, iconCorn, iconCow, iconCroissant, iconDimSum, iconDolmades, iconEggs, iconFactory, iconFish, iconFishAndChips, iconFishFilet, iconFriedChicken, iconFriedRice, iconFries, iconHamburger, iconHotDog, iconHourglass, iconIceCream, iconJam, iconLettuce, iconMacaron, iconMilk, iconNut, iconOmlette, iconPackage, iconPaella, iconPancakes, iconPie, iconPig, iconPizza, iconPopcorn, iconPork, iconPotato, iconPoultry, iconPrawn, iconQuesadilla, iconRice, iconRoastBeef, iconSalad, iconSamosa, iconSand, iconSandwich, iconSoup, iconSpeed, iconSpice, iconSteak, iconSugar, iconSushi, iconTaco, iconTomato, iconTortillaChips, iconTractor, iconWarehouse, iconWater, iconWheat, iconWorm, iconYoghurt, planetColony, planetDeposit, planetFactory, planetFarm, planetRadius, planetVirgin)
 
 
 planetRadius : Float
@@ -11,29 +11,29 @@ bleep =
     "media/Interface_Bleeps_OGG/Bleep_05.ogg"
 
 
-planetBarren : String
-planetBarren =
-    "media/Planets/Baren.png"
+planetVirgin : String
+planetVirgin =
+    "media/Planets/Virgin.png"
 
 
-planetIce : String
-planetIce =
-    "media/Planets/Ice.png"
+planetFactory : String
+planetFactory =
+    "media/Planets/Factory.png"
 
 
-planetLava : String
-planetLava =
-    "media/Planets/Lava.png"
+planetFarm : String
+planetFarm =
+    "media/Planets/Farm.png"
 
 
-planetTerran : String
-planetTerran =
-    "media/Planets/Terran.png"
+planetDeposit : String
+planetDeposit =
+    "media/Planets/Deposit.png"
 
 
-planetBlackHole : String
-planetBlackHole =
-    "media/Planets/Black_hole.png"
+planetColony : String
+planetColony =
+    "media/Planets/Colony.png"
 
 
 iconBread : String
