@@ -656,19 +656,19 @@ viewSelectedPlanet model planetId planet =
                 , style "text-align" "center"
                 , style "font-weight" "bold"
                 ]
-                [ Html.text ("The planet " ++ planet.name ++ " is producing")
-                ]
-            , if farm.countdown > 0 then
-                htmlTwoColumnGrid
-                    [ style "align-self" "center"
-                    , style "color" "white"
-                    ]
-                    [ Ingredient farm.perTurn farm.ingredient
-                    , Countdown farm.countdown
-                    ]
+                [ if farm.countdown > 0 then
+                    Html.text ("The planet " ++ planet.name ++ " is producing")
 
-              else
-                Html.text ""
+                  else
+                    Html.text ("The planet " ++ planet.name ++ " was producing")
+                ]
+            , htmlTwoColumnGrid
+                [ style "align-self" "center"
+                , style "color" "white"
+                ]
+                [ Ingredient farm.perTurn farm.ingredient
+                , Countdown farm.countdown
+                ]
             ]
 
         OccupiedPlanet (FactoryPlanet factory) ->
@@ -978,7 +978,15 @@ gridRowToTuple gridRow =
             ( String.fromInt turns
             , { icon = Theme.iconHourglass
               , title = "Turns"
-              , colors = [ Color.white |> Oklch.fromColor ]
+              , colors =
+                    if turns > 3 then
+                        [ Color.green |> Oklch.fromColor ]
+
+                    else if turns > 0 then
+                        [ Color.yellow |> Oklch.fromColor ]
+
+                    else
+                        [ Color.red |> Oklch.fromColor ]
               }
             )
                 |> Just
@@ -1388,14 +1396,18 @@ viewPlanet { selected, highlighted } id planet =
                     ]
 
                 OccupiedPlanet (FarmPlanet farm) ->
-                    [ svgTwoColumnGrid
-                        { x = cx
-                        , y = cy
-                        }
-                        [ Ingredient farm.perTurn farm.ingredient
-                        , Countdown farm.countdown
+                    if farm.countdown > 0 then
+                        [ svgTwoColumnGrid
+                            { x = cx
+                            , y = cy
+                            }
+                            [ Ingredient farm.perTurn farm.ingredient
+                            , Countdown farm.countdown
+                            ]
                         ]
-                    ]
+
+                    else
+                        []
 
                 OccupiedPlanet (FactoryPlanet factory) ->
                     [ svgTwoColumnGrid
