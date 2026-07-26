@@ -169,16 +169,16 @@ viewPlaying model =
         , style "gap" "8px"
         ]
         [ case model.selected of
-            SelectedNone ->
-                Html.text ""
-
             SelectedPlanet planetId ->
                 case IdDict.get planetId model.planets of
+                    Just planet ->
+                        bottomBox model planetId planet
+
                     Nothing ->
                         Html.text ""
 
-                    Just planet ->
-                        bottomBox model planetId planet
+            SelectedNone ->
+                Html.text ""
         , Html.div [ style "flex" "1 0" ] []
         , case Types.gamePhase model of
             EarlyGame ->
