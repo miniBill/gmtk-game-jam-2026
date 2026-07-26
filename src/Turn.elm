@@ -549,7 +549,7 @@ addPlanet mode budget fromDistance model =
                     (farmOptions ++ [ factoryOption, depositOption ])
                         |> VirginPlanet
                 )
-                (farmGenerator 3 [])
+                (farmGenerator 5 [])
                 factoryGenerator
                 (depositGenerator mode)
     in
