@@ -612,7 +612,10 @@ farmGenerator :
     -> Random.Generator (List OccupiedPlanet)
 farmGenerator count acc =
     if count <= 0 then
-        Random.constant (List.map FarmPlanet acc)
+        acc
+            |> List.sortBy (\option -> -option.perTurn * option.countdown)
+            |> List.map FarmPlanet
+            |> Random.constant
 
     else
         Random.map3 FarmData
