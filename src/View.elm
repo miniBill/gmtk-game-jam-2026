@@ -6,6 +6,7 @@ import Html.Attributes exposing (style)
 import Html.Events
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
+import Json.Decode
 import Length exposing (Length, Meters)
 import Phosphor
 import Point2d exposing (Point2d)
@@ -112,6 +113,10 @@ viewPlaying model =
         , style "width" "100%"
         , style "max-height" "100dvh"
         , Svg.Attributes.viewBox viewBox
+        , Svg.Events.on "wheel"
+            (Json.Decode.map MouseWheel
+                (Json.Decode.field "deltaY" Json.Decode.float)
+            )
         ]
         [ Svg.defs []
             [ selectionGradient.def

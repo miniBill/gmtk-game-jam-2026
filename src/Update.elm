@@ -253,3 +253,9 @@ updatePlaying msg model =
                 |> Playing
             , Cmd.none
             )
+
+        MouseWheel deltaY ->
+            ( { model | zoom = Quantity.multiplyBy (1.003 ^ -deltaY) model.zoom }
+                |> Playing
+            , Cmd.none
+            )

@@ -135,3 +135,4 @@ type PlayingMsg
     | HighlightPlanet (Id PlanetId)
     | HighlightNone
     | SetLink (Id PlanetId) (Id PlanetId) Product Int
+    | MouseWheel Float
