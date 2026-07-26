@@ -1396,10 +1396,10 @@ viewPlanet { selected, highlighted } id planet =
                         , SvgAttributes.cy (Length.inLightYears cy)
                         , SvgAttributes.r (Theme.planetRadius * 4.25)
                         , SvgAttributes.x
-                            (Length.inLightYears cx - Theme.planetRadius * 1.1)
+                            (Length.inLightYears cx - Theme.planetRadius * 1.6)
                         , SvgAttributes.y
                             (Length.inLightYears cy + Theme.planetRadius * 1.25)
-                        , SvgAttributes.width (Theme.planetRadius * 2.5)
+                        , SvgAttributes.width (Theme.planetRadius * 3.2)
                         , SvgAttributes.height (Theme.planetRadius * 2.85)
                         , Svg.Attributes.fill "#c44"
                         ]
