@@ -1,6 +1,7 @@
-module Product exposing (Product(..), all, primary, toColor, toIcon, toRecipe, toString)
+module Product exposing (Product(..), Recipe, all, primary, toColor, toIcon, toRecipe, toString)
 
 import Color.Oklch as Oklch
+import Maybe.Extra
 import Phosphor
 
 
@@ -32,7 +33,7 @@ all =
 
 primary : List Product
 primary =
-    List.filter (\product -> toRecipe product == Nothing) all
+    List.filter (\product -> Maybe.Extra.isNothing (toRecipe product)) all
 
 
 toIcon :
@@ -100,7 +101,14 @@ toString product =
             "Coffee"
 
 
-toRecipe : Product -> Maybe (List { product : Product, quantity : Int })
+type alias Recipe =
+    List
+        { product : Product
+        , quantity : Int
+        }
+
+
+toRecipe : Product -> Maybe Recipe
 toRecipe product =
     case product of
         Grain ->
@@ -147,6 +155,7 @@ toRecipe product =
 toColor : Product -> String
 toColor product =
     let
+        std : Float -> String
         std hue =
             Oklch.toCssString
                 { lightness = 0.75

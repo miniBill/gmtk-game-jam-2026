@@ -5,7 +5,7 @@ import Browser.Events
 import Json.Decode
 import Json.Encode
 import Quantity
-import Types exposing (Model, Msg(..), Page(..))
+import Types exposing (Model, Msg(..))
 import Update
 import View
 

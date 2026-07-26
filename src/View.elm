@@ -1,15 +1,14 @@
 module View exposing (svgContainerId, view)
 
 import Audio exposing (AudioData)
-import BoundingBox2d exposing (BoundingBox2d)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
 import Id exposing (Id, PlanetId)
-import IdDict
+import IdDict exposing (IdDict)
 import Length exposing (Length, Meters)
 import Phosphor
-import Point2d
+import Point2d exposing (Point2d)
 import Product exposing (Product)
 import Product.Dict
 import Quantity
@@ -77,7 +76,7 @@ view _ model =
 
 viewPlaying : PlayingModel -> List (Html PlayingMsg)
 viewPlaying model =
-    let
+    [ let
         ( containerWidth, containerHeight ) =
             model.svgContainerSize
 
@@ -102,8 +101,7 @@ viewPlaying model =
         viewBox : String
         viewBox =
             SvgAttributes.viewBox minX minY maxWidth maxHeight
-    in
-    [ let
+
         ( planetsViews, background ) =
             viewPlanets model
       in
@@ -292,7 +290,7 @@ viewLinkPossibilities model from fromPlanet =
     let
         addLinks :
             Id PlanetId
-            -> { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
+            -> { links : IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d Meters () }
             -> List (Html PlayingMsg)
             -> List (Html PlayingMsg)
         addLinks to toPlanet acc =
@@ -410,7 +408,7 @@ viewLinkPossibility :
         { from : Id PlanetId
         , fromPlanet : Planet
         , to : Id PlanetId
-        , toPlanet : { links : IdDict.IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d.Point2d Meters () }
+        , toPlanet : { links : IdDict PlanetId Link, name : String, kind : PlanetKind, position : Point2d Meters () }
         , available : List { product : Product, quantity : Int }
         , link : Link
         }
@@ -590,6 +588,7 @@ viewFactoryOption factory product =
 
         Just _ ->
             let
+                selected : Bool
                 selected =
                     factory.order == Just product
             in
@@ -900,17 +899,17 @@ viewPlanet { selected, highlighted } id planet =
         ( cx, cy ) =
             Point2d.coordinates planet.position
 
-        x : Float
-        x =
-            Length.inLightYears cx - Theme.planetRadius
-
-        y : Float
-        y =
-            Length.inLightYears cy - Theme.planetRadius
-
         img : Svg PlayingMsg
         img =
             let
+                x : Float
+                x =
+                    Length.inLightYears cx - Theme.planetRadius
+
+                y : Float
+                y =
+                    Length.inLightYears cy - Theme.planetRadius
+
                 ( src, { fade } ) =
                     planetImage planet
             in

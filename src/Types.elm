@@ -1,4 +1,4 @@
-module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Recipe, Selected(..))
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 import Audio
 import Browser.Dom
@@ -114,13 +114,6 @@ type alias ColonyData =
     , quantity : Int
     , countdown : Int
     }
-
-
-type alias Recipe =
-    List
-        { product : Product
-        , quantity : Int
-        }
 
 
 type Msg

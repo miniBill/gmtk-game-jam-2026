@@ -2,7 +2,7 @@ module Turn exposing (run)
 
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
-import Product
+import Product exposing (Product)
 import Product.Dict exposing (ProductDict)
 import Random
 import Types exposing (LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
@@ -251,7 +251,7 @@ fillDepositWith imports { capacity, content } =
             fillDepositStep availableCapacity (Product.Dict.toList imports) [] content
 
 
-fillDepositStep : Int -> List ( Product.Product, Int ) -> List ( Product.Product, Int ) -> ProductDict Int -> ProductDict Int
+fillDepositStep : Int -> List ( Product, Int ) -> List ( Product, Int ) -> ProductDict Int -> ProductDict Int
 fillDepositStep availableCapacity queue next content =
     if availableCapacity <= 0 then
         content
@@ -263,7 +263,7 @@ fillDepositStep availableCapacity queue next content =
                     [] ->
                         content
 
-                    _ ->
+                    _ :: _ ->
                         fillDepositStep availableCapacity next [] content
 
             ( product, quantity ) :: tail ->

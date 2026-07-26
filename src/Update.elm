@@ -2,9 +2,7 @@ module Update exposing (init, update)
 
 import Angle
 import Audio exposing (AudioCmd, AudioData)
-import Browser
 import Browser.Dom
-import Id exposing (Id(..), PlanetId)
 import IdDict
 import Length exposing (Length, Meters)
 import List.Extra
@@ -45,7 +43,7 @@ init () =
 
 
 update : AudioData -> Msg -> Model -> ( Model, Cmd Msg, AudioCmd Msg )
-update audioData msg model =
+update _ msg model =
     case {- Debug.log "msg" -} msg of
         PlaySound ->
             case model.sound of
@@ -143,6 +141,7 @@ update audioData msg model =
                     ( model, Cmd.none, Audio.cmdNone )
 
 
+getSvgContainerSize : Cmd Msg
 getSvgContainerSize =
     Process.sleep 0
         |> Task.andThen (\_ -> Browser.Dom.getViewportOf View.svgContainerId)
@@ -363,11 +362,10 @@ addPlanet mode budget fromDistance model =
                     Quantity.max ringWidth fromDistance
             in
             Random.map2 Point2d.rTheta
-                (Random.map Length.lightYears
-                    (Random.float
-                        (Length.inLightYears from)
-                        (Length.inLightYears (from |> Quantity.plus ringWidth))
-                    )
+                (Random.float
+                    (Length.inLightYears from)
+                    (Length.inLightYears (from |> Quantity.plus ringWidth))
+                    |> Random.map Length.lightYears
                 )
                 (Random.map Angle.radians (Random.float 0 (2 * pi)))
 

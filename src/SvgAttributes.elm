@@ -1,26 +1,16 @@
-module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, transformTranslate, viewBox, viewBoxWithPadding, width, x, x1, x2, y, y1, y2)
+module SvgAttributes exposing (cx, cy, fontSize, height, r, rx, ry, strokeWidth, transformTranslate, viewBox, width, x, x1, x2, y, y1, y2)
 
 import Length exposing (Length)
-import Quantity
 import Round
 import Svg exposing (Attribute)
 import Svg.Attributes
 
 
 viewBox : Length -> Length -> Length -> Length -> String
-viewBox minx_ miny_ width_ height_ =
-    [ minx_, miny_, width_, height_ ]
+viewBox minx miny width_ height_ =
+    [ minx, miny, width_, height_ ]
         |> List.map (\l -> Round.round 4 (Length.inLightYears l))
         |> String.join " "
-
-
-viewBoxWithPadding : Length -> Length -> Length -> Length -> Length -> String
-viewBoxWithPadding padding minx_ miny_ width_ height_ =
-    viewBox
-        (minx_ |> Quantity.minus padding)
-        (miny_ |> Quantity.minus padding)
-        (width_ |> Quantity.plus (Quantity.multiplyBy 2 padding))
-        (height_ |> Quantity.plus (Quantity.multiplyBy 2 padding))
 
 
 strokeWidth : Float -> Attribute msg
@@ -63,12 +53,12 @@ r v =
     Svg.Attributes.r (Round.round 4 v)
 
 
-rx : Float -> Svg.Attribute msg
+rx : Float -> Attribute msg
 rx v =
     Svg.Attributes.rx (Round.round 4 v)
 
 
-ry : Float -> Svg.Attribute msg
+ry : Float -> Attribute msg
 ry v =
     Svg.Attributes.ry (Round.round 4 v)
 
@@ -93,7 +83,7 @@ y2 v =
     Svg.Attributes.y2 (Round.round 4 v)
 
 
-fontSize : Float -> Svg.Attribute msg
+fontSize : Float -> Attribute msg
 fontSize v =
     Svg.Attributes.fontSize (Round.round 4 v)
 

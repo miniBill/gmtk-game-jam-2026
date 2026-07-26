@@ -1,4 +1,4 @@
-module IdDict exposing (IdDict, any, empty, filterMap, fold, get, insert, insertNew, merge, nextId, size, update, updateIfExists, updateWith, values)
+module IdDict exposing (IdDict, any, empty, fold, get, insert, insertNew, update, updateIfExists, updateWith)
 
 import FastDict as Dict exposing (Dict)
 import Id exposing (Id(..))
@@ -53,11 +53,6 @@ nextId dict =
             existing + 1
 
 
-values : IdDict k v -> List v
-values (IdDict dict) =
-    Dict.values dict
-
-
 any : (Id k -> v -> Bool) -> IdDict k v -> Bool
 any f (IdDict dict) =
     Dict.stoppableFoldl
@@ -70,22 +65,6 @@ any f (IdDict dict) =
         )
         False
         dict
-
-
-filterMap : (Id k -> v -> Maybe w) -> IdDict k v -> IdDict k w
-filterMap f (IdDict dict) =
-    Dict.foldl
-        (\k v acc ->
-            case f (Id k) v of
-                Just e ->
-                    Dict.insert k e acc
-
-                Nothing ->
-                    acc
-        )
-        Dict.empty
-        dict
-        |> IdDict
 
 
 merge :
@@ -122,8 +101,3 @@ updateWith new { inBoth, inNew } old =
         old
         new
         old
-
-
-size : IdDict k v -> Int
-size (IdDict dict) =
-    Dict.size dict
