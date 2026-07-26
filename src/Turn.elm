@@ -1,11 +1,27 @@
-module Turn exposing (run)
+module Turn exposing (addNewPlanets, run)
 
+import Angle
 import Id exposing (Id, PlanetId)
 import IdDict exposing (IdDict)
+import Length exposing (Length, Meters)
+import List.Extra
+import Point2d exposing (Point2d)
 import Product exposing (Product)
 import Product.Dict exposing (ProductDict)
+import Quantity
 import Random
-import Types exposing (LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
+import String.Extra
+import Types exposing (FarmData, GameMode, LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
+
+
+minimumPlanetDistance : Length
+minimumPlanetDistance =
+    Length.lightYears 0.75
+
+
+ringWidth : Length
+ringWidth =
+    Length.lightYears 1
 
 
 run : PlayingModel -> Result LostModel PlayingModel
@@ -15,6 +31,7 @@ run model =
             model
                 |> calculateExports
                 |> applyImport
+                |> addNewPlanets
                 |> updateCountdowns
     in
     if hasLost then
@@ -386,3 +403,218 @@ updateCountdown rings planet =
 
         OccupiedPlanet (DepositPlanet _) ->
             PlanetUnchanged
+
+
+addNewPlanets : PlayingModel -> PlayingModel
+addNewPlanets model =
+    let
+        ( maximumDistanceOccupied, maximumDistanceSeen ) =
+            IdDict.fold
+                (\_ planet ( maxOccupied, maxSeen ) ->
+                    let
+                        distance : Length
+                        distance =
+                            Point2d.distanceFrom Point2d.origin planet.position
+                    in
+                    case planet.kind of
+                        VirginPlanet _ ->
+                            ( maxOccupied
+                            , Quantity.max distance maxSeen
+                            )
+
+                        ColonyPlanet _ ->
+                            ( Quantity.max distance maxOccupied
+                            , Quantity.max distance maxSeen
+                            )
+
+                        OccupiedPlanet _ ->
+                            ( Quantity.max distance maxOccupied
+                            , Quantity.max distance maxSeen
+                            )
+                )
+                ( Quantity.zero, Quantity.zero )
+                model.planets
+    in
+    if
+        Quantity.difference maximumDistanceSeen maximumDistanceOccupied
+            |> Quantity.lessThan ringWidth
+    then
+        let
+            toAdd : Int
+            toAdd =
+                maximumDistanceSeen
+                    |> Length.inLightYears
+                    |> (\n -> n / 2)
+                    |> ceiling
+                    |> (+) 10
+        in
+        List.foldl
+            (\_ m ->
+                addPlanet model.gameMode 100 maximumDistanceSeen m
+            )
+            { model | rings = model.rings + 1 }
+            (List.range 1 toAdd)
+
+    else
+        model
+
+
+addPlanet : GameMode -> Float -> Length -> PlayingModel -> PlayingModel
+addPlanet mode budget fromDistance model =
+    let
+        ( planet, nextSeed ) =
+            Random.step planetGenerator model.currentSeed
+
+        planetGenerator : Random.Generator PlanetGenerationResult
+        planetGenerator =
+            Random.map3 (Planet IdDict.empty)
+                nameGenerator
+                positionGenerator
+                kindGenerator
+                |> Random.andThen
+                    (\generated ->
+                        if
+                            IdDict.any
+                                (\_ existing ->
+                                    Point2d.distanceFrom
+                                        existing.position
+                                        generated.position
+                                        |> Quantity.lessThan minimumPlanetDistance
+                                )
+                                model.planets
+                        then
+                            Random.weighted
+                                ( budget, RetryGeneration )
+                                [ ( 1, GiveUpGeneration ) ]
+
+                        else
+                            Random.constant (PlanetGenerated generated)
+                    )
+
+        positionGenerator : Random.Generator (Point2d Meters ())
+        positionGenerator =
+            let
+                from : Length
+                from =
+                    Quantity.max ringWidth fromDistance
+            in
+            Random.map2 Point2d.rTheta
+                (Random.float
+                    (Length.inLightYears from)
+                    (Length.inLightYears (from |> Quantity.plus ringWidth))
+                    |> Random.map Length.lightYears
+                )
+                (Random.map Angle.radians (Random.float 0 (2 * pi)))
+
+        kindGenerator : Random.Generator PlanetKind
+        kindGenerator =
+            Random.map3
+                (\farmOptions factoryOption depositOption ->
+                    (farmOptions ++ [ factoryOption, depositOption ])
+                        |> VirginPlanet
+                )
+                (farmGenerator 3 [])
+                factoryGenerator
+                (depositGenerator mode)
+    in
+    case planet of
+        GiveUpGeneration ->
+            { model | currentSeed = nextSeed }
+
+        PlanetGenerated generated ->
+            { model
+                | currentSeed = nextSeed
+                , planets = IdDict.insertNew generated model.planets
+            }
+
+        RetryGeneration ->
+            addPlanet mode (budget - 5) fromDistance { model | currentSeed = nextSeed }
+
+
+depositGenerator : GameMode -> Random.Generator OccupiedPlanet
+depositGenerator { hard } =
+    if hard then
+        Random.map
+            (\capacity ->
+                DepositPlanet
+                    { capacity = Just capacity
+                    , content = Product.Dict.empty
+                    }
+            )
+            (Random.int 10 25)
+
+    else
+        Random.constant
+            (DepositPlanet
+                { capacity = Nothing
+                , content = Product.Dict.empty
+                }
+            )
+
+
+factoryGenerator : Random.Generator OccupiedPlanet
+factoryGenerator =
+    Random.map
+        (\efficiency ->
+            FactoryPlanet
+                { efficiency = efficiency
+                , deposit = Product.Dict.empty
+                , order = Nothing
+                }
+        )
+        (Random.weighted ( 0.25, 0 )
+            [ ( 1, 1 )
+            , ( 3, 2 )
+            , ( 0.5, 3 )
+            ]
+        )
+
+
+farmGenerator :
+    Int
+    -> List FarmData
+    -> Random.Generator (List OccupiedPlanet)
+farmGenerator count acc =
+    if count <= 0 then
+        Random.constant (List.map FarmPlanet acc)
+
+    else
+        Random.map3 FarmData
+            (randomProduct (List.map .product acc))
+            (Random.int 2 10)
+            (Random.int 1 3)
+            |> Random.andThen (\farm -> farmGenerator (count - 1) (farm :: acc))
+
+
+randomProduct : List Product -> Random.Generator Product
+randomProduct existing =
+    case
+        List.Extra.removeWhen
+            (\product -> List.member product existing)
+            Product.primary
+    of
+        [] ->
+            Random.constant Product.Water
+
+        h :: t ->
+            Random.uniform h t
+
+
+nameGenerator : Random.Generator String
+nameGenerator =
+    -- TODO: unsteal this
+    let
+        pairGenerator : Random.Generator String
+        pairGenerator =
+            Random.uniform ""
+                [ "le", "xe", "ge", "za", "ce", "bi", "so", "us", "es", "ar", "ma", "in", "di", "re", "a", "er", "at", "en", "be", "ra", "la", "ve", "ti", "ed", "or", "qu", "an", "te", "is", "ri", "on" ]
+    in
+    Random.weighted ( 3, 4 ) [ ( 1, 5 ) ]
+        |> Random.andThen (\length -> Random.list length pairGenerator)
+        |> Random.map (\l -> String.Extra.toSentenceCase (String.concat l))
+
+
+type PlanetGenerationResult
+    = RetryGeneration
+    | PlanetGenerated Planet
+    | GiveUpGeneration
