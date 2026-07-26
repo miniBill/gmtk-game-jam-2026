@@ -16,6 +16,7 @@ body {
   background-image: url("media/Blue Nebula/Blue_Nebula_01-1024x1024.png");
   background-repeat: repeat;
   background-size: cover;
+  font-family: "Roboto", sans-serif;
 }
 
 p {
@@ -31,4 +32,9 @@ img {
 .on-hover-highlight:hover {
   background-color: #88f !important;
   box-shadow: 0 0 10px 4px blue;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: local("Roboto"), url("media/Font/Roboto.ttf");
 }
