@@ -1,6 +1,7 @@
-module Product exposing (Product(..), Recipe, all, primary, toColor, toIcon, toRecipe, toString)
+module Product exposing (Product(..), Recipe, all, primary, toColors, toIcon, toRecipe, toString)
 
-import Color.Oklch as Oklch
+import Color
+import Color.Oklch as Oklch exposing (Oklch)
 import Maybe.Extra
 import Theme
 
@@ -638,36 +639,62 @@ toRecipe product =
             Nothing
 
 
-toColor : Product -> String
-toColor product =
-    let
-        std : Float -> String
-        std hue =
-            Oklch.toCssString
-                { lightness = 0.75
-                , chroma = 0.125
-                , hue = hue / 360
-                , alpha = 1
-                }
-    in
+toColors : Product -> List Oklch
+toColors product =
     case product of
-        Wheat ->
-            std 105
+        Avocado ->
+            [ Color.rgb255 0x00 0xFF 0x00 |> Oklch.fromColor ]
+
+        Blueberry ->
+            [ Color.rgb255 0x99 0x00 0xFF |> Oklch.fromColor ]
+
+        Chicken ->
+            [ Color.rgb255 0xFF 0x00 0x00 |> Oklch.fromColor ]
+
+        Chocolate ->
+            [ Color.rgb255 0xBB 0x77 0x00 |> Oklch.fromColor ]
+
+        Corn ->
+            [ Color.rgb255 0xFF 0xFF 0x00 |> Oklch.fromColor ]
+
+        Cow ->
+            [ Color.rgb255 0xCC 0xCC 0xCC |> Oklch.fromColor ]
+
+        Fish ->
+            [ Color.rgb255 0x44 0x44 0xFF |> Oklch.fromColor ]
+
+        Lettuce ->
+            [ Color.rgb255 0x44 0xFF 0x44 |> Oklch.fromColor ]
+
+        Nut ->
+            [ Color.rgb255 0x00 0x66 0x00 |> Oklch.fromColor ]
+
+        Pig ->
+            [ Color.rgb255 0xFF 0x00 0x99 |> Oklch.fromColor ]
+
+        Potato ->
+            [ Color.rgb255 0xCC 0xFF 0x00 |> Oklch.fromColor ]
+
+        Rice ->
+            [ Color.rgb255 0xFF 0xFF 0xFF |> Oklch.fromColor ]
+
+        Shrimps ->
+            [ Color.rgb255 0xFF 0x00 0xDD |> Oklch.fromColor ]
+
+        Sugar ->
+            [ Color.rgb255 0x00 0xFF 0xFF |> Oklch.fromColor ]
+
+        Tomato ->
+            [ Color.rgb255 0xFF 0x44 0x00 |> Oklch.fromColor ]
 
         Water ->
-            std 230
+            [ Color.rgb255 0x44 0x44 0xFF |> Oklch.fromColor ]
 
-        Bread ->
-            std 80
-
-        Milk ->
-            "white"
-
-        Cheese ->
-            std 60
-
-        Pizza ->
-            std 330
+        Wheat ->
+            [ Color.rgb255 0xFF 0xFF 0x44 |> Oklch.fromColor ]
 
         _ ->
-            "blue"
+            toRecipe product
+                |> Maybe.withDefault []
+                |> List.concatMap (\item -> toColors item.product)
+                |> List.map (\oklch -> { oklch | lightness = 0.25 + oklch.lightness * 0.75 })

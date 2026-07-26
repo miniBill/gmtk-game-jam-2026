@@ -183,7 +183,7 @@ iconLettuce =
 
 iconMilk : String
 iconMilk =
-    "media/Products/icons8-milk-100.png"
+    "media/Products/icons8-milk-bottle-100.png"
 
 
 iconNut : String

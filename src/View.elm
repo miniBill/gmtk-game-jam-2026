@@ -1,6 +1,9 @@
 module View exposing (svgContainerId, view)
 
+import Angle
 import Audio exposing (AudioData)
+import Color exposing (Color)
+import Color.Oklch as Oklch exposing (Oklch)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (style)
 import Html.Events
@@ -13,6 +16,7 @@ import Point2d exposing (Point2d)
 import Product exposing (Product)
 import Product.Dict
 import Quantity exposing (Quantity)
+import Round
 import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
@@ -433,7 +437,7 @@ viewLinkPossibilities model from fromPlanet =
                             ]
                             { icon = Product.toIcon product
                             , title = Product.toString product
-                            , color = Product.toColor product
+                            , colors = Product.toColors product
                             }
                     )
                     products
@@ -699,7 +703,7 @@ viewVirginPlanetOption planetId option =
                     , [ htmlIcon [ style "height" "30px" ]
                             { icon = Theme.iconTractor
                             , title = "Farm"
-                            , color = "transparent"
+                            , colors = []
                             }
                       , htmlTwoColumnGrid []
                             [ Product perTurn product
@@ -713,7 +717,7 @@ viewVirginPlanetOption planetId option =
                     , [ htmlIcon [ style "height" "30px" ]
                             { icon = Theme.iconFactory
                             , title = "Factory"
-                            , color = "transparent"
+                            , colors = []
                             }
                       , htmlTwoColumnGrid []
                             [ Efficiency efficiency
@@ -726,7 +730,7 @@ viewVirginPlanetOption planetId option =
                     , [ htmlIcon [ style "height" "30px" ]
                             { icon = Theme.iconWarehouse
                             , title = "Deposit"
-                            , color = "transparent"
+                            , colors = []
                             }
                       , htmlTwoColumnGrid []
                             [ Capacity capacity
@@ -775,7 +779,7 @@ gridRowToHtml gridRow =
     case gridRowToTuple gridRow of
         Just ( text, rowIcon ) ->
             [ Html.div [] [ Html.text text ]
-            , htmlIcon [] rowIcon
+            , htmlIcon [ style "height" "28px" ] rowIcon
             ]
 
         Nothing ->
@@ -789,7 +793,7 @@ gridRowToTuple :
             ( String
             , { icon : String
               , title : String
-              , color : String
+              , colors : List Oklch
               }
             )
 gridRowToTuple gridRow =
@@ -798,7 +802,7 @@ gridRowToTuple gridRow =
             ( String.fromInt quantity
             , { icon = Product.toIcon product
               , title = Product.toString product
-              , color = Product.toColor product
+              , colors = Product.toColors product
               }
             )
                 |> Just
@@ -807,7 +811,7 @@ gridRowToTuple gridRow =
             ( String.fromInt turns
             , { icon = Theme.iconHourglass
               , title = "Turns"
-              , color = "white"
+              , colors = [ Color.white |> Oklch.fromColor ]
               }
             )
                 |> Just
@@ -816,7 +820,7 @@ gridRowToTuple gridRow =
             ( String.fromInt efficiency
             , { icon = Theme.iconSpeed
               , title = "Production per turn"
-              , color = "gray"
+              , colors = [ Color.gray |> Oklch.fromColor ]
               }
             )
                 |> Just
@@ -828,7 +832,7 @@ gridRowToTuple gridRow =
             ( String.fromInt capacity
             , { icon = Theme.iconPackage
               , title = "Capacity"
-              , color = "brown"
+              , colors = [ Color.brown |> Oklch.fromColor ]
               }
             )
                 |> Just
@@ -839,7 +843,7 @@ htmlIcon :
     ->
         { icon : String
         , title : String
-        , color : String
+        , colors : List Oklch
         }
     -> Html msg
 htmlIcon attrs config =
@@ -847,7 +851,7 @@ htmlIcon attrs config =
         (style "height" "18px"
             :: style "padding" "2px"
             :: style "border-radius"
-                (if config.color == "transparent" then
+                (if List.isEmpty config.colors then
                     "0"
 
                  else
@@ -855,7 +859,36 @@ htmlIcon attrs config =
                 )
             :: Html.Attributes.title config.title
             :: Html.Attributes.src config.icon
-            :: style "background" config.color
+            :: style "background"
+                (if List.isEmpty config.colors then
+                    "transparent"
+
+                 else
+                    let
+                        sectorDegrees : Int
+                        sectorDegrees =
+                            360 // List.length config.colors
+
+                        stops : String
+                        stops =
+                            config.colors
+                                |> List.indexedMap
+                                    (\i color ->
+                                        [ Oklch.toCssString color
+                                            ++ " "
+                                            ++ String.fromInt (sectorDegrees * i)
+                                            ++ "deg"
+                                        , Oklch.toCssString color
+                                            ++ " "
+                                            ++ String.fromInt (sectorDegrees * (i + 1))
+                                            ++ "deg"
+                                        ]
+                                    )
+                                |> List.concat
+                                |> String.join ","
+                    in
+                    "conic-gradient(" ++ stops ++ ")"
+                )
             :: attrs
         )
         []
@@ -908,13 +941,7 @@ gridRowToSvg i row =
                         , y = Theme.planetRadius * 0.1
                         }
                     ]
-                    [ Svg.circle
-                        [ SvgAttributes.cx (Theme.planetRadius * 0.5)
-                        , SvgAttributes.cy (Theme.planetRadius * 0.5)
-                        , SvgAttributes.r (Theme.planetRadius * 0.6)
-                        , Svg.Attributes.fill rowIcon.color
-                        ]
-                        []
+                    [ svgRadialBackground rowIcon
                     , Svg.image
                         [ Svg.Attributes.xlinkHref rowIcon.icon
                         , SvgAttributes.x (Theme.planetRadius * 0.1)
@@ -936,6 +963,94 @@ gridRowToSvg i row =
 
         Nothing ->
             Svg.text ""
+
+
+svgRadialBackground :
+    { icon : String
+    , title : String
+    , colors : List Oklch
+    }
+    -> Svg msg
+svgRadialBackground rowIcon =
+    let
+        radius : Float
+        radius =
+            Theme.planetRadius * 1.1 / 2
+    in
+    case rowIcon.colors of
+        [] ->
+            Svg.text ""
+
+        [ color ] ->
+            Svg.circle
+                [ SvgAttributes.cx (Theme.planetRadius / 2)
+                , SvgAttributes.cy (Theme.planetRadius / 2)
+                , SvgAttributes.r radius
+                , Svg.Attributes.fill (Oklch.toCssString color)
+                ]
+                []
+
+        _ ->
+            let
+                sectorDegrees : Int
+                sectorDegrees =
+                    360 // List.length rowIcon.colors
+
+                sector : Int -> Oklch -> Svg msg
+                sector i color =
+                    let
+                        at : Float -> { x : String, y : String }
+                        at angle =
+                            { x = Round.round 4 (radius * Angle.cos (Angle.degrees (angle - 90)))
+                            , y = Round.round 4 (radius * Angle.sin (Angle.degrees (angle - 90)))
+                            }
+
+                        start : { x : String, y : String }
+                        start =
+                            at (toFloat (i * sectorDegrees))
+
+                        end : { x : String, y : String }
+                        end =
+                            at (toFloat ((i + 1) * sectorDegrees))
+
+                        largeArcFlag : String
+                        largeArcFlag =
+                            if sectorDegrees <= 180 then
+                                "0"
+
+                            else
+                                "1"
+                    in
+                    Svg.path
+                        [ Svg.Attributes.fill (Oklch.toCssString color)
+                        , [ "M"
+                          , start.x
+                          , start.y
+                          , "A"
+                          , Round.round 4 radius
+                          , Round.round 4 radius
+                          , "0" -- x axis rotation
+                          , largeArcFlag
+                          , "1" -- sweep flag
+                          , end.x
+                          , end.y
+                          , "L 0 0 L"
+                          , start.x
+                          , start.y
+                          ]
+                            |> String.join " "
+                            |> Svg.Attributes.d
+                        ]
+                        []
+            in
+            rowIcon.colors
+                |> List.indexedMap sector
+                |> Svg.g
+                    [ SvgAttributes.transformTranslate
+                        { x = Theme.planetRadius * 0.5
+                        , y = Theme.planetRadius * 0.5
+                        }
+                    ]
 
 
 viewPlanets : PlayingModel -> ( List (Svg PlayingMsg), List (Svg msg) )
