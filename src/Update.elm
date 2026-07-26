@@ -160,8 +160,11 @@ initialEarth =
     , kind =
         ColonyPlanet
             { product = Food.Ingredient Food.Water
-            , quantity = 1
+            , quantity = 2
             , countdown = 10
+            , nextProduct = Food.Ingredient Food.Wheat
+            , nextQuantity = 1
+            , nextCountdown = 8
             }
     }
 

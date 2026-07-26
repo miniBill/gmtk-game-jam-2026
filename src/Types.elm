@@ -117,6 +117,9 @@ type alias ColonyData =
     { product : Food
     , quantity : Int
     , countdown : Int
+    , nextProduct : Food
+    , nextQuantity : Int
+    , nextCountdown : Int
     }
 
 

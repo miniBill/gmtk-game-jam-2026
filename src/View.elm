@@ -174,7 +174,7 @@ viewPlaying model =
             SelectedPlanet planetId ->
                 case IdDict.get planetId model.planets of
                     Just planet ->
-                        bottomBox model planetId planet
+                        linksBox model planetId planet
 
                     Nothing ->
                         Html.text ""
@@ -328,8 +328,8 @@ svgContainerId =
     "svg-container"
 
 
-bottomBox : PlayingModel -> Id PlanetId -> Planet -> Html PlayingMsg
-bottomBox model planetId planet =
+linksBox : PlayingModel -> Id PlanetId -> Planet -> Html PlayingMsg
+linksBox model planetId planet =
     Html.div
         [ style "display" "flex"
         , style "gap" "8px"
@@ -1405,24 +1405,38 @@ viewPlanet { selected, highlighted } id planet =
 
                 ColonyPlanet colony ->
                     [ Svg.rect
-                        [ SvgAttributes.cx (Length.inLightYears cx)
-                        , SvgAttributes.cy (Length.inLightYears cy)
-                        , SvgAttributes.r (Theme.planetRadius * 4.25)
-                        , SvgAttributes.x
+                        [ SvgAttributes.x
                             (Length.inLightYears cx - Theme.planetRadius * 1.6)
                         , SvgAttributes.y
                             (Length.inLightYears cy + Theme.planetRadius * 1.25)
                         , SvgAttributes.width (Theme.planetRadius * 3.2)
-                        , SvgAttributes.height (Theme.planetRadius * 2.85)
+                        , SvgAttributes.height (Theme.planetRadius * 5.0)
                         , Svg.Attributes.fill "#c44"
                         ]
                         []
+                    , Svg.text_
+                        [ SvgAttributes.x
+                            (Length.inLightYears cx - Theme.planetRadius * 0.7)
+                        , SvgAttributes.y
+                            (Length.inLightYears cy + Theme.planetRadius * 4.6)
+                        , SvgAttributes.fontSize 0.1
+                        , Svg.Attributes.fill "white"
+                        ]
+                        [ Svg.text "then" ]
                     , svgTwoColumnsGrid []
                         { x = cx
                         , y = cy
                         }
                         [ Food colony.quantity colony.product
                         , Countdown colony.countdown
+                        ]
+                    , svgTwoColumnsGrid []
+                        { x = cx
+                        , y =
+                            Length.lightYears (Theme.planetRadius * 3.4)
+                                |> Quantity.plus cy
+                        }
+                        [ Food colony.nextQuantity colony.nextProduct
                         ]
                     ]
 

@@ -365,10 +365,12 @@ updateCountdown model planet =
                         { planet
                             | kind =
                                 ColonyPlanet
-                                    { colony
-                                        | countdown = max 5 model.rings
-                                        , quantity = max 1 quantity
-                                        , product = product
+                                    { countdown = colony.nextCountdown
+                                    , quantity = colony.nextQuantity
+                                    , product = colony.nextProduct
+                                    , nextCountdown = max 5 model.rings
+                                    , nextQuantity = max 1 quantity
+                                    , nextProduct = product
                                     }
                         }
                     )
