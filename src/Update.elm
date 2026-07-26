@@ -15,7 +15,7 @@ import Task
 import Theme
 import Time
 import Turn
-import Types exposing (GameMode, Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (GameMode, GamePhase(..), Highlighted(..), Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 import View
 
 
@@ -162,8 +162,12 @@ getSvgContainerSize =
 
 initPlayingModel : GameMode -> Int -> PlayingModel
 initPlayingModel gameMode initialSeed =
+    let
+        ( initialEarth, seed ) =
+            Random.step initialEarthGenerator (Random.initialSeed initialSeed)
+    in
     { initialSeed = initialSeed
-    , currentSeed = Random.initialSeed initialSeed
+    , currentSeed = seed
     , planets = IdDict.empty |> IdDict.insertNew initialEarth
     , selected = SelectedNone
     , highlighted = HighlightedNone
@@ -177,21 +181,25 @@ initPlayingModel gameMode initialSeed =
     }
 
 
-initialEarth : Planet
-initialEarth =
-    { name = "Terra"
-    , position = Point2d.origin
-    , links = IdDict.empty
-    , kind =
-        ColonyPlanet
-            { product = Food.Ingredient Food.Water
-            , quantity = 2
-            , countdown = 10
-            , nextProduct = Food.Ingredient Food.Wheat
-            , nextQuantity = 1
-            , nextCountdown = 8
+initialEarthGenerator : Random.Generator Planet
+initialEarthGenerator =
+    Random.map
+        (\product ->
+            { name = "Terra"
+            , position = Point2d.origin
+            , links = IdDict.empty
+            , kind =
+                ColonyPlanet
+                    { product = Food.Ingredient Food.Water
+                    , quantity = 2
+                    , countdown = 10
+                    , nextCountdown = 8
+                    , nextQuantity = 1
+                    , nextProduct = product
+                    }
             }
-    }
+        )
+        (Turn.randomColonyRequest EarlyGame)
 
 
 updatePlaying : PlayingMsg -> PlayingModel -> ( Page, Cmd PlayingMsg )

@@ -1,4 +1,4 @@
-module Turn exposing (addNewPlanets, run)
+module Turn exposing (addNewPlanets, randomColonyRequest, run)
 
 import Angle
 import Food exposing (Food, Ingredient)
@@ -375,48 +375,7 @@ updateCountdown model planet =
                         }
                     )
                     (Random.int 1 model.rings)
-                    (case Types.gamePhase model of
-                        EarlyGame ->
-                            case
-                                Food.allIngredients
-                                    |> List.Extra.removeWhen
-                                        (\ingredient ->
-                                            colonyNeverAsks (Food.Ingredient ingredient)
-                                                || Food.isDuneIngredient ingredient
-                                        )
-                            of
-                                [] ->
-                                    Random.constant (Food.Ingredient Food.Water)
-
-                                h :: t ->
-                                    Random.map Food.Ingredient (Random.uniform h t)
-
-                        MidGame ->
-                            case
-                                Food.all
-                                    |> List.Extra.removeWhen
-                                        (\food ->
-                                            colonyNeverAsks food
-                                                || Food.isDuneFood food
-                                        )
-                            of
-                                [] ->
-                                    Random.constant (Food.Ingredient Food.Water)
-
-                                h :: t ->
-                                    Random.uniform h t
-
-                        LateGame ->
-                            case
-                                Food.all
-                                    |> List.Extra.removeWhen colonyNeverAsks
-                            of
-                                [] ->
-                                    Random.constant (Food.Ingredient Food.Water)
-
-                                h :: t ->
-                                    Random.uniform h t
-                    )
+                    (randomColonyRequest (Types.gamePhase model))
                     |> PlanetScored colony.countdown
 
             else if colony.countdown <= 1 then
@@ -442,6 +401,51 @@ updateCountdown model planet =
 
         OccupiedPlanet (DepositPlanet _) ->
             PlanetUnchanged
+
+
+randomColonyRequest : GamePhase -> Random.Generator Food
+randomColonyRequest gamePhase =
+    case gamePhase of
+        EarlyGame ->
+            case
+                Food.allIngredients
+                    |> List.Extra.removeWhen
+                        (\ingredient ->
+                            colonyNeverAsks (Food.Ingredient ingredient)
+                                || Food.isDuneIngredient ingredient
+                        )
+            of
+                [] ->
+                    Random.constant (Food.Ingredient Food.Water)
+
+                h :: t ->
+                    Random.map Food.Ingredient (Random.uniform h t)
+
+        MidGame ->
+            case
+                Food.all
+                    |> List.Extra.removeWhen
+                        (\food ->
+                            colonyNeverAsks food
+                                || Food.isDuneFood food
+                        )
+            of
+                [] ->
+                    Random.constant (Food.Ingredient Food.Water)
+
+                h :: t ->
+                    Random.uniform h t
+
+        LateGame ->
+            case
+                Food.all
+                    |> List.Extra.removeWhen colonyNeverAsks
+            of
+                [] ->
+                    Random.constant (Food.Ingredient Food.Water)
+
+                h :: t ->
+                    Random.uniform h t
 
 
 colonyNeverAsks : Food -> Bool
