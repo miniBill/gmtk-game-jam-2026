@@ -385,7 +385,18 @@ updateCountdown model planet =
                                 h :: t ->
                                     Random.map Food.Ingredient (Random.uniform h t)
 
-                        _ ->
+                        MidGame ->
+                            case
+                                Food.all
+                                    |> List.Extra.removeWhen colonyNeverAsks
+                            of
+                                [] ->
+                                    Random.constant (Food.Ingredient Food.Water)
+
+                                h :: t ->
+                                    Random.uniform h t
+
+                        LateGame ->
                             case
                                 Food.all
                                     |> List.Extra.removeWhen colonyNeverAsks

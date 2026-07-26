@@ -193,31 +193,54 @@ viewPlaying model =
                     Just planet ->
                         bottomBox model planetId planet
         , Html.div [ style "flex" "1 0" ] []
-        , if Types.gamePhase model == EarlyGame then
-            Html.text ""
+        , case Types.gamePhase model of
+            EarlyGame ->
+                Html.text ""
 
-          else
-            Html.p
-                [ style "color" "white"
-                , style "font-weight" "bold"
-                , style "text-align" "center"
-                ]
-                [ Html.text "Recipes" ]
-        , if Types.gamePhase model == EarlyGame then
-            Html.text ""
-
-          else
-            Food.allProducts
-                |> List.map viewRecipe
-                |> List.sortBy Tuple.first
-                |> List.map Tuple.second
-                |> Html.div
-                    [ style "display" "flex"
-                    , style "flex-wrap" "wrap"
-                    , style "gap" "8px"
-                    , style "max-height" "40dvh"
-                    , style "overflow" "scroll"
+            MidGame ->
+                Html.p
+                    [ style "color" "white"
+                    , style "font-weight" "bold"
+                    , style "text-align" "center"
                     ]
+                    [ Html.text "Recipes" ]
+
+            LateGame ->
+                Html.p
+                    [ style "color" "white"
+                    , style "font-weight" "bold"
+                    , style "text-align" "center"
+                    ]
+                    [ Html.text "Recipes" ]
+        , case Types.gamePhase model of
+            EarlyGame ->
+                Html.text ""
+
+            MidGame ->
+                Food.allProducts
+                    |> List.map viewRecipe
+                    |> List.sortBy Tuple.first
+                    |> List.map Tuple.second
+                    |> Html.div
+                        [ style "display" "flex"
+                        , style "flex-wrap" "wrap"
+                        , style "gap" "8px"
+                        , style "max-height" "40dvh"
+                        , style "overflow" "scroll"
+                        ]
+
+            LateGame ->
+                Food.allProducts
+                    |> List.map viewRecipe
+                    |> List.sortBy Tuple.first
+                    |> List.map Tuple.second
+                    |> Html.div
+                        [ style "display" "flex"
+                        , style "flex-wrap" "wrap"
+                        , style "gap" "8px"
+                        , style "max-height" "40dvh"
+                        , style "overflow" "scroll"
+                        ]
         , Html.div
             [ style "display" "flex"
             , style "gap" "8px"
