@@ -214,7 +214,7 @@ viewPlaying model =
                         , style "flex-wrap" "wrap"
                         , style "gap" "8px"
                         , style "max-height" "40dvh"
-                        , style "overflow" "scroll"
+                        , style "overflow-y" "scroll"
                         ]
 
             LateGame ->
@@ -227,7 +227,7 @@ viewPlaying model =
                         , style "flex-wrap" "wrap"
                         , style "gap" "8px"
                         , style "max-height" "40dvh"
-                        , style "overflow" "scroll"
+                        , style "overflow-y" "scroll"
                         ]
         , Html.div
             [ style "display" "flex"
@@ -709,7 +709,7 @@ viewSelectedPlanet model planetId planet =
                         )
                     |> List.map (viewFactoryOption factory)
                     |> selectionRow
-                        [ style "overflow" "scroll"
+                        [ style "overflow-y" "scroll"
                         , style "max-height" "40vh"
                         ]
                     |> Html.map (SetFactoryProduction planetId)
