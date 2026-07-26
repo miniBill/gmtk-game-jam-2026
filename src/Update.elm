@@ -115,8 +115,8 @@ update _ msg model =
                             Playing
                                 { playingModel
                                     | svgContainerSize =
-                                        ( Pixels.pixels (floor viewport.width)
-                                        , Pixels.pixels (floor viewport.height)
+                                        ( Pixels.pixels viewport.width
+                                        , Pixels.pixels viewport.height
                                         )
                                 }
                       }
@@ -148,6 +148,7 @@ initPlayingModel gameMode initialSeed =
     , svgContainerSize = ( Pixels.pixels 200, Pixels.pixels 200 )
     , center = Point2d.origin
     , zoom = Quantity.rate Length.lightYear (Pixels.pixels 200)
+    , mousePosition = Point2d.origin
     }
 
 
@@ -254,8 +255,17 @@ updatePlaying msg model =
             , Cmd.none
             )
 
-        MouseWheel deltaY ->
-            ( { model | zoom = Quantity.multiplyBy (1.003 ^ -deltaY) model.zoom }
+        MouseWheel newZoom newCenter ->
+            ( { model
+                | zoom = newZoom
+                , center = newCenter
+              }
+                |> Playing
+            , Cmd.none
+            )
+
+        MouseMove position ->
+            ( { model | mousePosition = position }
                 |> Playing
             , Cmd.none
             )

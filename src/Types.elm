@@ -35,9 +35,10 @@ type alias PlayingModel =
     , score : Int
     , gameMode : GameMode
     , rings : Int
-    , svgContainerSize : ( Quantity Int Pixels, Quantity Int Pixels )
+    , svgContainerSize : ( Quantity Float Pixels, Quantity Float Pixels )
     , center : Point2d Meters ()
     , zoom : Quantity Float (Quantity.Rate Meters Pixels)
+    , mousePosition : Point2d Meters ()
     }
 
 
@@ -135,4 +136,5 @@ type PlayingMsg
     | HighlightPlanet (Id PlanetId)
     | HighlightNone
     | SetLink (Id PlanetId) (Id PlanetId) Product Int
-    | MouseWheel Float
+    | MouseWheel (Quantity Float (Quantity.Rate Meters Pixels)) (Point2d Meters ())
+    | MouseMove (Point2d Meters ())
