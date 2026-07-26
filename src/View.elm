@@ -1531,7 +1531,7 @@ planetImage planet =
             ( Theme.planetFarm, { fade = countdown <= 0 } )
 
         OccupiedPlanet (FactoryPlanet _) ->
-            ( Theme.iconFactory, { fade = False } )
+            ( Theme.planetFactory, { fade = False } )
 
         OccupiedPlanet (DepositPlanet _) ->
             ( Theme.planetDeposit, { fade = False } )
