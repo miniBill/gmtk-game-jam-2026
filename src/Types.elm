@@ -1,4 +1,4 @@
-module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+module Types exposing (ColonyData, DepositData, FactoryData, FarmData, GameMode, GamePhase(..), Highlighted(..), Link, LostModel, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..), gamePhase)
 
 import Audio
 import Browser.Dom
@@ -138,3 +138,21 @@ type PlayingMsg
     | SetLink (Id PlanetId) (Id PlanetId) Food Int
     | MouseWheel (Quantity Float (Quantity.Rate Meters Pixels)) (Point2d Meters ())
     | MouseMove (Point2d Meters ())
+
+
+type GamePhase
+    = EarlyGame
+    | MidGame
+    | LateGame
+
+
+gamePhase : PlayingModel -> GamePhase
+gamePhase model =
+    if model.rings < 5 then
+        EarlyGame
+
+    else if model.rings < 8 then
+        MidGame
+
+    else
+        LateGame

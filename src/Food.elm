@@ -351,10 +351,10 @@ productToString product =
             "Cheese"
 
         ChineseFriedRice ->
-            "Chinese Fried Rice"
+            "Fried Rice"
 
         ChocolateSpread ->
-            "Chocolate Spread"
+            "Chocolate Spread™"
 
         Cookie ->
             "Cookie"

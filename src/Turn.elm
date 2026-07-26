@@ -11,7 +11,7 @@ import Point2d exposing (Point2d)
 import Quantity
 import Random
 import String.Extra
-import Types exposing (FarmData, GameMode, LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
+import Types exposing (FarmData, GameMode, GamePhase(..), LostModel, OccupiedPlanet(..), Planet, PlanetKind(..), PlayingModel)
 
 
 minimumPlanetDistance : Length
@@ -307,7 +307,7 @@ updateCountdowns : PlayingModel -> ( PlayingModel, Bool )
 updateCountdowns model =
     IdDict.fold
         (\planetId planet (( modelAcc, lost ) as acc) ->
-            case updateCountdown model.rings planet of
+            case updateCountdown model planet of
                 PlanetUnchanged ->
                     acc
 
@@ -351,8 +351,8 @@ type CountdownUpdateResult
     | PlanetUnchanged
 
 
-updateCountdown : Int -> Planet -> CountdownUpdateResult
-updateCountdown rings planet =
+updateCountdown : PlayingModel -> Planet -> CountdownUpdateResult
+updateCountdown model planet =
     case planet.kind of
         VirginPlanet _ ->
             PlanetUnchanged
@@ -365,35 +365,36 @@ updateCountdown rings planet =
                             | kind =
                                 ColonyPlanet
                                     { colony
-                                        | countdown = max 5 rings
+                                        | countdown = max 5 model.rings
                                         , quantity = max 1 quantity
                                         , product = product
                                     }
                         }
                     )
-                    (Random.int 1 rings)
-                    (if rings < 5 then
-                        case
-                            Food.allIngredients
-                                |> List.Extra.removeWhen
-                                    (\ingredient -> colonyNeverAsks (Food.Ingredient ingredient))
-                        of
-                            [] ->
-                                Random.constant (Food.Ingredient Food.Water)
+                    (Random.int 1 model.rings)
+                    (case Types.gamePhase model of
+                        EarlyGame ->
+                            case
+                                Food.allIngredients
+                                    |> List.Extra.removeWhen
+                                        (\ingredient -> colonyNeverAsks (Food.Ingredient ingredient))
+                            of
+                                [] ->
+                                    Random.constant (Food.Ingredient Food.Water)
 
-                            h :: t ->
-                                Random.map Food.Ingredient (Random.uniform h t)
+                                h :: t ->
+                                    Random.map Food.Ingredient (Random.uniform h t)
 
-                     else
-                        case
-                            Food.all
-                                |> List.Extra.removeWhen colonyNeverAsks
-                        of
-                            [] ->
-                                Random.constant (Food.Ingredient Food.Water)
+                        _ ->
+                            case
+                                Food.all
+                                    |> List.Extra.removeWhen colonyNeverAsks
+                            of
+                                [] ->
+                                    Random.constant (Food.Ingredient Food.Water)
 
-                            h :: t ->
-                                Random.uniform h t
+                                h :: t ->
+                                    Random.uniform h t
                     )
                     |> PlanetScored colony.countdown
 

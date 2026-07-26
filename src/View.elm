@@ -23,7 +23,7 @@ import Svg.Attributes
 import Svg.Events
 import SvgAttributes
 import Theme
-import Types exposing (FactoryData, Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Types exposing (FactoryData, GamePhase(..), Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
 
 
 view : AudioData -> Model -> Html Msg
@@ -193,7 +193,7 @@ viewPlaying model =
                     Just planet ->
                         bottomBox model planetId planet
         , Html.div [ style "flex" "1 0" ] []
-        , if model.rings < 4 then
+        , if Types.gamePhase model == EarlyGame then
             Html.text ""
 
           else
@@ -203,7 +203,7 @@ viewPlaying model =
                 , style "text-align" "center"
                 ]
                 [ Html.text "Recipes" ]
-        , if model.rings < 4 then
+        , if Types.gamePhase model == EarlyGame then
             Html.text ""
 
           else
@@ -215,7 +215,7 @@ viewPlaying model =
                     [ style "display" "flex"
                     , style "flex-wrap" "wrap"
                     , style "gap" "8px"
-                    , style "max-height" "50dvh"
+                    , style "max-height" "40dvh"
                     , style "overflow" "scroll"
                     ]
         , Html.div
@@ -247,7 +247,7 @@ bottomBox model planetId planet =
         , style "max-width" "90vw"
         , style "align-items" "center"
         ]
-        (viewSelectedPlanet planetId planet
+        (viewSelectedPlanet model planetId planet
             ++ (case planet.kind of
                     VirginPlanet _ ->
                         []
@@ -539,8 +539,8 @@ viewLinkPossibility model config =
     nameView :: List.map viewProductInput config.available
 
 
-viewSelectedPlanet : Id PlanetId -> Planet -> List (Html PlayingMsg)
-viewSelectedPlanet planetId planet =
+viewSelectedPlanet : PlayingModel -> Id PlanetId -> Planet -> List (Html PlayingMsg)
+viewSelectedPlanet model planetId planet =
     case planet.kind of
         VirginPlanet options ->
             [ Html.p
@@ -552,7 +552,7 @@ viewSelectedPlanet planetId planet =
                 [ Html.text ("Colonize planet " ++ planet.name)
                 ]
             , selectionRow []
-                (List.map (viewVirginPlanetOption planetId) options)
+                (List.filterMap (viewVirginPlanetOption (Types.gamePhase model) planetId) options)
             ]
 
         ColonyPlanet colony ->
@@ -616,7 +616,10 @@ viewSelectedPlanet planetId planet =
                     ]
                 , Food.allProducts
                     |> List.map (viewFactoryOption factory)
-                    |> selectionRow []
+                    |> selectionRow
+                        [ style "overflow" "scroll"
+                        , style "max-height" "40vh"
+                        ]
                     |> Html.map (SetFactoryProduction planetId)
                 ]
 
@@ -664,7 +667,7 @@ viewFactoryOption factory product =
             Html.Events.onClick (Just product)
         , style "cursor" "pointer"
         ]
-        [ Product factory.efficiency product
+        [ Product_ product
         ]
 
 
@@ -698,10 +701,10 @@ viewRecipe product =
     )
 
 
-viewVirginPlanetOption : Id PlanetId -> OccupiedPlanet -> Html PlayingMsg
-viewVirginPlanetOption planetId option =
+viewVirginPlanetOption : GamePhase -> Id PlanetId -> OccupiedPlanet -> Maybe (Html PlayingMsg)
+viewVirginPlanetOption gamePhase planetId option =
     let
-        ( background, children ) =
+        ( background, children, isFactory ) =
             case option of
                 FarmPlanet { ingredient, countdown, perTurn } ->
                     ( "#cfc"
@@ -715,6 +718,7 @@ viewVirginPlanetOption planetId option =
                             , Countdown countdown
                             ]
                       ]
+                    , False
                     )
 
                 FactoryPlanet { efficiency } ->
@@ -728,6 +732,7 @@ viewVirginPlanetOption planetId option =
                             [ Efficiency efficiency
                             ]
                       ]
+                    , True
                     )
 
                 DepositPlanet { capacity } ->
@@ -741,30 +746,36 @@ viewVirginPlanetOption planetId option =
                             [ Capacity capacity
                             ]
                       ]
+                    , False
                     )
     in
-    Html.div
-        [ style "border-radius" "4px"
-        , style "gap" "4px"
-        , style "padding" "4px"
-        , style "display" "flex"
-        , style "flex-direction" "column"
-        , style "align-items" "center"
-        , style "background-color" background
-        , style "width" "60px"
-        , Html.Attributes.class "on-hover-highlight"
-        , Html.Events.onClick (OccupyPlanet planetId option)
-        ]
-        children
+    if gamePhase == EarlyGame && isFactory then
+        Nothing
+
+    else
+        Html.div
+            [ style "border-radius" "4px"
+            , style "gap" "4px"
+            , style "padding" "4px"
+            , style "display" "flex"
+            , style "flex-direction" "column"
+            , style "align-items" "center"
+            , style "background-color" background
+            , style "flex" "1 0"
+            , Html.Attributes.class "on-hover-highlight"
+            , Html.Events.onClick (OccupyPlanet planetId option)
+            ]
+            children
+            |> Just
 
 
 htmlTwoColumnGrid : List (Attribute msg) -> List GridRow -> Html msg
 htmlTwoColumnGrid attrs children =
     Html.div
         ([ style "display" "grid"
-         , style "gap" "2px"
+         , style "gap" "4px"
          , style "align-items" "center"
-         , style "grid-template-columns" "auto auto"
+         , style "grid-template-columns" "auto 28px auto"
          , style "text-align" "center"
          ]
             ++ attrs
@@ -775,6 +786,7 @@ htmlTwoColumnGrid attrs children =
 type GridRow
     = Ingredient Int Ingredient
     | Product Int Product
+    | Product_ Product
     | Food Int Food
     | Countdown Int
     | Efficiency Int
@@ -787,6 +799,7 @@ gridRowToHtml gridRow =
         Just ( text, rowIcon ) ->
             [ Html.div [] [ Html.text text ]
             , htmlIcon [ style "height" "28px" ] rowIcon
+            , Html.div [] [ Html.text rowIcon.title ]
             ]
 
         Nothing ->
@@ -810,6 +823,15 @@ gridRowToTuple gridRow =
             , { icon = Food.toIcon food
               , title = Food.toString food
               , colors = Food.toColors food
+              }
+            )
+                |> Just
+
+        Product_ product ->
+            ( ""
+            , { icon = Food.productToIcon product
+              , title = Food.productToString product
+              , colors = Food.productToColors product
               }
             )
                 |> Just
