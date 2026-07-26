@@ -1086,7 +1086,7 @@ selectionRow attrs children =
         children
 
 
-svgTwoColumnGrid :
+svgTwoColumnsGrid :
     List (Svg.Attribute msg)
     ->
         { x : Length
@@ -1094,7 +1094,7 @@ svgTwoColumnGrid :
         }
     -> List GridRow
     -> Svg msg
-svgTwoColumnGrid attrs config rows =
+svgTwoColumnsGrid attrs config rows =
     rows
         |> List.indexedMap gridRowToSvg
         |> Svg.g
@@ -1404,7 +1404,7 @@ viewPlanet { selected, highlighted } id planet =
                         , Svg.Attributes.fill "#c44"
                         ]
                         []
-                    , svgTwoColumnGrid []
+                    , svgTwoColumnsGrid []
                         { x = cx
                         , y = cy
                         }
@@ -1415,7 +1415,7 @@ viewPlanet { selected, highlighted } id planet =
 
                 OccupiedPlanet (FarmPlanet farm) ->
                     if farm.countdown > 0 then
-                        [ svgTwoColumnGrid []
+                        [ svgTwoColumnsGrid []
                             { x = cx
                             , y = cy
                             }
@@ -1428,7 +1428,7 @@ viewPlanet { selected, highlighted } id planet =
                         []
 
                 OccupiedPlanet (FactoryPlanet factory) ->
-                    [ svgTwoColumnGrid []
+                    [ svgTwoColumnsGrid []
                         { x = cx
                         , y = cy
                         }
@@ -1444,7 +1444,7 @@ viewPlanet { selected, highlighted } id planet =
                     ]
 
                 OccupiedPlanet (DepositPlanet deposit) ->
-                    [ svgTwoColumnGrid []
+                    [ svgTwoColumnsGrid []
                         { x = cx
                         , y = cy
                         }
@@ -1493,11 +1493,11 @@ viewLinks model =
             IdDict.fold
                 (\to link iacc ->
                     case viewLink model from fromPlanet to link of
-                        Nothing ->
+                        [] ->
                             iacc
 
-                        Just linkView ->
-                            linkView :: iacc
+                        linkView ->
+                            linkView ++ iacc
                 )
                 acc
                 fromPlanet.links
@@ -1506,30 +1506,50 @@ viewLinks model =
         model.planets
 
 
-viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> Maybe (Svg PlayingMsg)
+viewLink : PlayingModel -> Id PlanetId -> Planet -> Id PlanetId -> Link -> List (Svg PlayingMsg)
 viewLink model from fromPlanet to link =
     if Food.Dict.all (\_ v -> v <= 0) link then
-        Nothing
+        []
 
     else
-        IdDict.get to model.planets
-            |> Maybe.map
-                (\toPlanet ->
-                    let
-                        ( x1, y1 ) =
-                            Point2d.coordinates fromPlanet.position
+        case IdDict.get to model.planets of
+            Just toPlanet ->
+                let
+                    avg : Length -> Length -> Length
+                    avg l r =
+                        Quantity.plus l (Quantity.multiplyBy 0.5 (Quantity.difference r l))
 
-                        ( x2, y2 ) =
-                            Point2d.coordinates toPlanet.position
-                    in
-                    Svg.line
-                        [ SvgAttributes.x1 (Length.inLightYears x1)
-                        , SvgAttributes.y1 (Length.inLightYears y1)
-                        , SvgAttributes.x2 (Length.inLightYears x2)
-                        , SvgAttributes.y2 (Length.inLightYears y2)
-                        , Svg.Events.onClick (SelectPlanet from)
-                        , SvgAttributes.strokeWidth 0.01
-                        , Svg.Attributes.stroke linkGradient.ref
-                        ]
-                        []
-                )
+                    ( x1, y1 ) =
+                        Point2d.coordinates fromPlanet.position
+
+                    ( x2, y2 ) =
+                        Point2d.coordinates toPlanet.position
+                in
+                [ Svg.line
+                    [ SvgAttributes.x1 (Length.inLightYears x1)
+                    , SvgAttributes.y1 (Length.inLightYears y1)
+                    , SvgAttributes.x2 (Length.inLightYears x2)
+                    , SvgAttributes.y2 (Length.inLightYears y2)
+                    , Svg.Events.onClick (SelectPlanet from)
+                    , SvgAttributes.strokeWidth 0.01
+                    , Svg.Attributes.stroke linkGradient.ref
+                    ]
+                    []
+                , link
+                    |> Food.Dict.toList
+                    |> List.filterMap
+                        (\( food, quantity ) ->
+                            if quantity == 0 then
+                                Nothing
+
+                            else
+                                Just (Food quantity food)
+                        )
+                    |> svgTwoColumnsGrid []
+                        { x = avg x1 x2
+                        , y = avg y1 y2
+                        }
+                ]
+
+            Nothing ->
+                []
