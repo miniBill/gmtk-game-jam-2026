@@ -1547,7 +1547,7 @@ viewLinks model =
                         [] ->
                             iacc
 
-                        linkView ->
+                        (_ :: _) as linkView ->
                             linkView ++ iacc
                 )
                 acc
