@@ -25,6 +25,7 @@ import Svg.Events
 import SvgAttributes
 import Theme
 import Types exposing (FactoryData, GameMode(..), GamePhase(..), Highlighted(..), Link, Model, Msg(..), OccupiedPlanet(..), Page(..), Planet, PlanetKind(..), PlayingModel, PlayingMsg(..), Selected(..))
+import Vector2d
 
 
 view : AudioData -> Model -> Html Msg
@@ -310,7 +311,13 @@ calculateZoom model deltaY offsetX offsetY =
             -- (mouse - oldCenter) * oldZoon = (mouse - newCenter) * newZoom
             -- (oldCenter - mouse) * oldZoon = (newCenter - mouse) * newZoom
             -- (newCenter - mouse) = (oldCenter - mouse) * oldZoon / newZoon
-            model.center
+            -- newCenter = (oldCenter - mouse) * oldZoon / newZoon + mouse
+            Point2d.translateBy
+                (Vector2d.from mousePosition model.center
+                    |> Vector2d.at_ model.zoom
+                    |> Vector2d.at newZoom
+                )
+                mousePosition
     in
     MouseWheel newZoom newCenter
 
