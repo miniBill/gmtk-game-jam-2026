@@ -776,6 +776,7 @@ viewRecipe product =
         , style "flex-direction" "column"
         , style "background" "gray"
         , style "padding" "8px"
+        , style "gap" "4px"
         , style "align-items" "center"
         , Html.Attributes.class "on-hover-highlight"
         , style "cursor" "pointer"
