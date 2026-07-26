@@ -1087,20 +1087,23 @@ selectionRow attrs children =
 
 
 svgTwoColumnGrid :
-    { x : Length
-    , y : Length
-    }
+    List (Svg.Attribute msg)
+    ->
+        { x : Length
+        , y : Length
+        }
     -> List GridRow
     -> Svg msg
-svgTwoColumnGrid config rows =
+svgTwoColumnGrid attrs config rows =
     rows
         |> List.indexedMap gridRowToSvg
         |> Svg.g
-            [ SvgAttributes.transformTranslate
+            (SvgAttributes.transformTranslate
                 { x = Length.inLightYears config.x
                 , y = Length.inLightYears config.y
                 }
-            ]
+                :: attrs
+            )
 
 
 svgThreeColumnsGrid :
@@ -1388,8 +1391,20 @@ viewPlanet { selected, highlighted } id planet =
                         |> List.singleton
 
                 ColonyPlanet colony ->
-                    [ Svg.rect [] []
-                    , svgTwoColumnGrid
+                    [ Svg.rect
+                        [ SvgAttributes.cx (Length.inLightYears cx)
+                        , SvgAttributes.cy (Length.inLightYears cy)
+                        , SvgAttributes.r (Theme.planetRadius * 4.25)
+                        , SvgAttributes.x
+                            (Length.inLightYears cx - Theme.planetRadius * 1.1)
+                        , SvgAttributes.y
+                            (Length.inLightYears cy + Theme.planetRadius * 1.25)
+                        , SvgAttributes.width (Theme.planetRadius * 2.5)
+                        , SvgAttributes.height (Theme.planetRadius * 2.85)
+                        , Svg.Attributes.fill "#c44"
+                        ]
+                        []
+                    , svgTwoColumnGrid []
                         { x = cx
                         , y = cy
                         }
@@ -1400,7 +1415,7 @@ viewPlanet { selected, highlighted } id planet =
 
                 OccupiedPlanet (FarmPlanet farm) ->
                     if farm.countdown > 0 then
-                        [ svgTwoColumnGrid
+                        [ svgTwoColumnGrid []
                             { x = cx
                             , y = cy
                             }
@@ -1413,7 +1428,7 @@ viewPlanet { selected, highlighted } id planet =
                         []
 
                 OccupiedPlanet (FactoryPlanet factory) ->
-                    [ svgTwoColumnGrid
+                    [ svgTwoColumnGrid []
                         { x = cx
                         , y = cy
                         }
@@ -1429,7 +1444,10 @@ viewPlanet { selected, highlighted } id planet =
                     ]
 
                 OccupiedPlanet (DepositPlanet deposit) ->
-                    [ svgTwoColumnGrid { x = cx, y = cy }
+                    [ svgTwoColumnGrid []
+                        { x = cx
+                        , y = cy
+                        }
                         (Capacity deposit.capacity
                             :: List.map
                                 (\( product, quantity ) -> Food quantity product)
@@ -1444,7 +1462,7 @@ viewPlanet { selected, highlighted } id planet =
         , Svg.Events.onMouseOut HighlightNone
         , Svg.Attributes.cursor "pointer"
         ]
-        (img :: bottomView)
+        (bottomView ++ [ img ])
     , selectionView
     )
 
