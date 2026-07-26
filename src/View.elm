@@ -1133,7 +1133,7 @@ viewPlanet { selected, highlighted } id planet =
             else
                 []
 
-        bottomView : Svg PlayingMsg
+        bottomView : List (Svg PlayingMsg)
         bottomView =
             case planet.kind of
                 VirginPlanet options ->
@@ -1162,27 +1162,31 @@ viewPlanet { selected, highlighted } id planet =
                             { x = cx
                             , y = cy
                             }
+                        |> List.singleton
 
                 ColonyPlanet colony ->
-                    svgTwoColumnGrid
+                    [ Svg.rect [] []
+                    , svgTwoColumnGrid
                         { x = cx
                         , y = cy
                         }
                         [ Product colony.quantity colony.product
                         , Countdown colony.countdown
                         ]
+                    ]
 
                 OccupiedPlanet (FarmPlanet farm) ->
-                    svgTwoColumnGrid
+                    [ svgTwoColumnGrid
                         { x = cx
                         , y = cy
                         }
                         [ Product farm.perTurn farm.product
                         , Countdown farm.countdown
                         ]
+                    ]
 
                 OccupiedPlanet (FactoryPlanet factory) ->
-                    svgTwoColumnGrid
+                    [ svgTwoColumnGrid
                         { x = cx
                         , y = cy
                         }
@@ -1195,14 +1199,16 @@ viewPlanet { selected, highlighted } id planet =
                                 [ Efficiency factory.efficiency
                                 ]
                         )
+                    ]
 
                 OccupiedPlanet (DepositPlanet deposit) ->
-                    svgTwoColumnGrid { x = cx, y = cy }
+                    [ svgTwoColumnGrid { x = cx, y = cy }
                         (Capacity deposit.capacity
                             :: List.map
                                 (\( product, quantity ) -> Product quantity product)
                                 (Product.Dict.toList deposit.content)
                         )
+                    ]
     in
     ( Svg.g
         [ Svg.Attributes.id (Id.toString id)
@@ -1211,7 +1217,7 @@ viewPlanet { selected, highlighted } id planet =
         , Svg.Events.onMouseOut HighlightNone
         , Svg.Attributes.cursor "pointer"
         ]
-        [ img, bottomView ]
+        (img :: bottomView)
     , selectionView
     )
 
