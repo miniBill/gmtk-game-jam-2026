@@ -121,44 +121,16 @@ viewPlaying model =
         , Svg.Attributes.viewBox viewBox
         , Svg.Events.on "wheel"
             (Json.Decode.map3
-                (\deltaY offsetX offsetY ->
-                    let
-                        mousePosition =
-                            Point2d.xy
-                                (minX
-                                    |> Quantity.plus
-                                        (Quantity.multiplyBy
-                                            (Quantity.ratio
-                                                (Pixels.pixels offsetX)
-                                                containerWidth
-                                            )
-                                            maxWidth
-                                        )
-                                )
-                                (minY
-                                    |> Quantity.plus
-                                        (Quantity.multiplyBy
-                                            (Quantity.ratio
-                                                (Pixels.pixels offsetY)
-                                                containerHeight
-                                            )
-                                            maxHeight
-                                        )
-                                )
-
-                        newZoom : Quantity Float (Quantity.Rate Meters Pixels)
-                        newZoom =
-                            Quantity.multiplyBy (1.003 ^ deltaY) model.zoom
-
-                        newCenter : Point2d Meters ()
-                        newCenter =
-                            model.center
-                    in
-                    MouseWheel newZoom newCenter
+                (calculateZoom
+                    model
                 )
                 (Json.Decode.field "deltaY" Json.Decode.float)
-                (Json.Decode.field "offsetX" Json.Decode.float)
-                (Json.Decode.field "offsetY" Json.Decode.float)
+                (Json.Decode.map Pixels.pixels
+                    (Json.Decode.field "offsetX" Json.Decode.float)
+                )
+                (Json.Decode.map Pixels.pixels
+                    (Json.Decode.field "offsetY" Json.Decode.float)
+                )
             )
         ]
         [ Svg.defs []
@@ -254,6 +226,69 @@ viewPlaying model =
             ]
         ]
     ]
+
+
+calculateZoom :
+    PlayingModel
+    -> Float
+    -> Quantity Float Pixels
+    -> Quantity Float Pixels
+    -> PlayingMsg
+calculateZoom model deltaY offsetX offsetY =
+    let
+        ( containerWidth, containerHeight ) =
+            model.svgContainerSize
+
+        minX : Length
+        minX =
+            Point2d.xCoordinate model.center
+                |> Quantity.minus (Quantity.multiplyBy 0.5 maxWidth)
+
+        minY : Length
+        minY =
+            Point2d.yCoordinate model.center
+                |> Quantity.minus (Quantity.multiplyBy 0.5 maxHeight)
+
+        maxWidth : Length
+        maxWidth =
+            Quantity.at model.zoom containerWidth
+
+        maxHeight : Length
+        maxHeight =
+            Quantity.at model.zoom containerHeight
+
+        mousePosition =
+            Point2d.xy
+                (minX
+                    |> Quantity.plus
+                        (Quantity.multiplyBy
+                            (Quantity.ratio
+                                offsetX
+                                containerWidth
+                            )
+                            maxWidth
+                        )
+                )
+                (minY
+                    |> Quantity.plus
+                        (Quantity.multiplyBy
+                            (Quantity.ratio
+                                offsetY
+                                containerHeight
+                            )
+                            maxHeight
+                        )
+                )
+
+        newZoom : Quantity Float (Quantity.Rate Meters Pixels)
+        newZoom =
+            Quantity.multiplyBy (1.003 ^ deltaY) model.zoom
+
+        newCenter : Point2d Meters ()
+        newCenter =
+            model.center
+    in
+    MouseWheel newZoom newCenter
 
 
 svgContainerId : String
