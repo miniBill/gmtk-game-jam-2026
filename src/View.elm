@@ -805,6 +805,7 @@ viewVirginPlanetOption gamePhase planetId option =
                             , title = "Farm"
                             , colors = []
                             }
+                      , Html.text "Build farm"
                       , htmlTwoColumnGrid []
                             [ Ingredient perTurn ingredient
                             , Countdown countdown
@@ -820,6 +821,7 @@ viewVirginPlanetOption gamePhase planetId option =
                             , title = "Factory"
                             , colors = []
                             }
+                      , Html.text "Build factory"
                       , htmlTwoColumnGrid []
                             [ Efficiency efficiency
                             ]
@@ -834,6 +836,7 @@ viewVirginPlanetOption gamePhase planetId option =
                             , title = "Deposit"
                             , colors = []
                             }
+                      , Html.text "Build deposit"
                       , htmlTwoColumnGrid []
                             [ Capacity capacity
                             ]
