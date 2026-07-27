@@ -97,10 +97,10 @@ update _ msg model =
             )
 
         AudioLoadResult (Err e) ->
-            let
-                _ =
-                    Debug.log "AudioLoadResult (Err e)" e
-            in
+            -- let
+            --     _ =
+            --         Debug.log "AudioLoadResult (Err e)" e
+            -- in
             ( model, Cmd.none, Audio.cmdNone )
 
         AudioLoadResult (Ok sound) ->
@@ -131,10 +131,10 @@ update _ msg model =
             ( model, getSvgContainerSize, Audio.cmdNone )
 
         GotSvgContainerSize (Err e) ->
-            let
-                _ =
-                    Debug.log "GotSvgContainerSize (Err e)" e
-            in
+            -- let
+            --     _ =
+            --         Debug.log "GotSvgContainerSize (Err e)" e
+            -- in
             ( model, Cmd.none, Audio.cmdNone )
 
         GotSvgContainerSize (Ok { viewport }) ->
