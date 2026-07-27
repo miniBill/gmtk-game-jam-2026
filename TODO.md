@@ -1,8 +1,12 @@
 ## Must
 
+- There is a black rectangle flashing?
+
 ## Should
 
+- Bigger "send to" buttons
 - Easy: no 3rd level products / Normal / Hard: capacity cap
+- Highligh possible producers + deposits that have it + ingredients
 
 ## Could
 
